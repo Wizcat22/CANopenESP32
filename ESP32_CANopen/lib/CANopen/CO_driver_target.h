@@ -237,6 +237,7 @@ typedef struct{
  */
 typedef struct{
     uint32_t            ident;          /**< CAN identifier as aligned in CAN module */
+    uint32_t            mask;           //Add MASK-Flag for RTR-bit
     uint8_t             DLC ;           /**< Length of CAN message. (DLC may also be part of ident) */
     uint8_t             data[8];        /**< 8 data bytes */
     volatile bool_t     bufferFull;     /**< True if previous message is still in buffer */
@@ -254,6 +255,9 @@ typedef struct{
     uint16_t            rxSize;         /**< From CO_CANmodule_init() */
     CO_CANtx_t         *txArray;        /**< From CO_CANmodule_init() */
     uint16_t            txSize;         /**< From CO_CANmodule_init() */
+    uint8_t             rxPin;          /**< CAN rxPin of uC */
+    uint8_t             txPin;          /**< CAN txPin of uC */
+    uint32_t            baudrate;       /**< CAN baud rate */
     volatile bool_t     CANnormal;      /**< CAN module is in normal mode */
     /** Value different than zero indicates, that CAN module hardware filters
       * are used for CAN reception. If there is not enough hardware filters,
@@ -281,7 +285,7 @@ typedef struct{
  *
  * @param CANmodule This object.
  */
-void CO_CANinterrupt(CO_CANmodule_t *CANmodule);
+void CO_CANinterrupt(void *args);
 
 #ifdef __cplusplus
 }
