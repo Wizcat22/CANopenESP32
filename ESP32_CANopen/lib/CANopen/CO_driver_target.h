@@ -238,6 +238,7 @@ typedef struct{
 typedef struct{
     uint32_t            ident;          /**< CAN identifier as aligned in CAN module */
     uint32_t            mask;           //Add MASK-Flag for RTR-bit
+    bool                rtr;            //RTR-Flag
     uint8_t             DLC ;           /**< Length of CAN message. (DLC may also be part of ident) */
     uint8_t             data[8];        /**< 8 data bytes */
     volatile bool_t     bufferFull;     /**< True if previous message is still in buffer */

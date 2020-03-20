@@ -55,7 +55,7 @@ void mainTask(void *pvParameter)
     };
 
     /* initialize CANopen */
-    err = CO_init(&canBase, 10 /* NodeID */, 125 /* bit rate */);
+    err = CO_init(&canBase, 10 /* NodeID */, 1000 /* bit rate */);
     if (err != CO_ERROR_NO)
     {
       while (1)
@@ -91,7 +91,7 @@ void mainTask(void *pvParameter)
       /* Process EEPROM */
 
       /* Wait */
-      vTaskDelay(1000 / portTICK_PERIOD_MS);
+      vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
   }
   /* program exit
