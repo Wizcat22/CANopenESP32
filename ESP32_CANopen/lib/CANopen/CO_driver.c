@@ -70,15 +70,15 @@ void CO_CANsetConfigurationMode(void *CANdriverState){
 
 /******************************************************************************/
 void CO_CANsetNormalMode(CO_CANmodule_t *CANmodule){
-    generalConfig.mode = CAN_MODE_NORMAL;
-    generalConfig.tx_io = CAN_TX_IO;
-    generalConfig.rx_io = CAN_RX_IO;
-    generalConfig.clkout_io = CAN_IO_UNUSED;
-    generalConfig.bus_off_io = CAN_IO_UNUSED;
-    generalConfig.tx_queue_len = CAN_TX_QUEUE_LENGTH;
-    generalConfig.rx_queue_len = CAN_RX_QUEUE_LENGTH;
-    generalConfig.alerts_enabled = CAN_ALERT_NONE;
-    generalConfig.clkout_divider = 0;
+    //Install CAN driver
+    ESP_ERROR_CHECK(can_driver_install(&generalConfig, &timingConfig, &filterConfig));
+    ESP_ERROR_CHECK(can_start());
+
+    /* configure CAN interrupt registers */
+    /*WORKAROUND: KEINE INTERRUPTS MÖGLICH DA BEREITS IM TREIBER VERWENDET*/
+    /* Configure Timer interrupt function for execution every CO_CAN_PSEUDO_INTERRUPT_INTERVAL */
+    ESP_ERROR_CHECK(esp_timer_create(&CO_CANinterruptArgs, &CO_CANinterruptPeriodicTimer));
+    ESP_ERROR_CHECK(esp_timer_start_periodic(CO_CANinterruptPeriodicTimer, CO_CAN_PSEUDO_INTERRUPT_INTERVAL));
     CANmodule->CANnormal = true;
 }
 
@@ -98,6 +98,7 @@ CO_ReturnError_t CO_CANmodule_init(
 
     /* verify arguments */
     if(CANmodule==NULL || rxArray==NULL || txArray==NULL){
+        ESP_LOGE("CO_CANmodule_init","Verify arguments!");
         return CO_ERROR_ILLEGAL_ARGUMENT;
     }
 
@@ -105,31 +106,45 @@ CO_ReturnError_t CO_CANmodule_init(
     CANmodule->CANdriverState = CANdriverState;
     CANmodule->baudrate = CANbitRate;
     CANmodule->rxSize = rxSize;
+    CANmodule->rxArray = rxArray;
     CANmodule->rxPin = CAN_RX_IO;
     CANmodule->txSize = txSize;
+    CANmodule->txArray = txArray;
     CANmodule->txPin = CAN_TX_IO;
-    CANmodule->CANnormal = false;
-    CANmodule->useCANrxFilters = false;/* microcontroller dependent */
-    CANmodule->bufferInhibitFlag = false;
+    CANmodule->useCANrxFilters = false;
     CANmodule->firstCANtxMessage = true;
+    CANmodule->CANnormal = false;
+    CANmodule->bufferInhibitFlag = false;
     CANmodule->CANtxCount = 0U;
     CANmodule->errOld = 0U;
     CANmodule->em = NULL;
-    CANmodule->rxArray = rxArray;
-    CANmodule->txArray = txArray;
+
+
 
     for(uint16_t i=0U; i<rxSize; i++){
-        rxArray[i].ident = 0U;
-        rxArray[i].mask = (uint16_t)0xFFFFFFFFU;
-        rxArray[i].object = NULL;
-        rxArray[i].pFunct = NULL;
+        CANmodule->rxArray[i].ident = 0U;
+        CANmodule->rxArray[i].mask = (uint16_t)0xFFFFFFFFU;
+        CANmodule->rxArray[i].object = NULL;
+        CANmodule->rxArray[i].pFunct = NULL;
     }
     for(uint16_t i=0U; i<txSize; i++){
-        txArray[i].bufferFull = false;
+        CANmodule->txArray[i].bufferFull = false;
     }
 
-    /* Configure CAN module registers */
 
+
+
+
+    /* Configure CAN module registers */
+    generalConfig.mode = CAN_MODE_NORMAL;
+    generalConfig.tx_io = CAN_TX_IO;
+    generalConfig.rx_io = CAN_RX_IO;
+    generalConfig.clkout_io = CAN_IO_UNUSED;
+    generalConfig.bus_off_io = CAN_IO_UNUSED;
+    generalConfig.tx_queue_len = CAN_TX_QUEUE_LENGTH;
+    generalConfig.rx_queue_len = CAN_RX_QUEUE_LENGTH;
+    generalConfig.alerts_enabled = CAN_ALERT_ALL;
+    generalConfig.clkout_divider = 0;
 
 
     /* Configure CAN timing */
@@ -233,16 +248,6 @@ CO_ReturnError_t CO_CANmodule_init(
         filterConfig.acceptance_mask = 0xFFFFFFFF;
         filterConfig.single_filter = true;
     }
-
-    //Install CAN driver
-    ESP_ERROR_CHECK(can_driver_install(&generalConfig, &timingConfig, &filterConfig));
-
-    /* configure CAN interrupt registers */
-    /*WORKAROUND: KEINE INTERRUPTS MÖGLICH DA BEREITS IM TREIBER VERWENDET*/
-    /* Configure Timer interrupt function for execution every CO_CAN_PSEUDO_INTERRUPT_INTERVAL */
-    ESP_ERROR_CHECK(esp_timer_create(&CO_CANinterruptArgs, &CO_CANinterruptPeriodicTimer));
-    ESP_ERROR_CHECK(esp_timer_start_periodic(CO_CANinterruptPeriodicTimer, CO_CAN_PSEUDO_INTERRUPT_INTERVAL));
-
     return CO_ERROR_NO;
 }
 
@@ -250,7 +255,7 @@ CO_ReturnError_t CO_CANmodule_init(
 /******************************************************************************/
 void CO_CANmodule_disable(CO_CANmodule_t *CANmodule){
     /* turn off the module */
-    can_stop();
+    ESP_ERROR_CHECK(can_stop());
 }
 
 
@@ -411,16 +416,18 @@ CO_ReturnError_t CO_CANreceive(CO_CANmodule_t *CANmodule)
     can_status_info_t canDriverStatus;
     can_get_status_info(&canDriverStatus);
     
-    CO_CANrx_t CO_receivedMessage;
-    uint8_t index = 0;
-    can_message_t receivedMesage;
+    CO_CANrx_t* CO_Array_Pointer;
+    CO_Array_Pointer = CANmodule->rxArray;
+    CO_CANrx_t temp_helper_message;
+    uint8_t temp_index = 0;
+    can_message_t receivedMessage;
 
 //ToDo: COCANrx_handle
 //ToDo: For (Every Package in Queue)
-    
+
     if (canDriverStatus.msgs_to_rx > 0)
     {
-        if (can_receive(&receivedMesage, pdMS_TO_TICKS(1)) == ESP_OK)
+        if (can_receive(&receivedMessage, pdMS_TO_TICKS(1)) == ESP_OK)
         {
             ESP_LOGE("CO_CANreceive", "Message received");
         }
@@ -429,8 +436,37 @@ CO_ReturnError_t CO_CANreceive(CO_CANmodule_t *CANmodule)
             ESP_LOGE("CO_CANreceive", "Failed to receive message\n");
             err = CO_ERROR_TIMEOUT;
         }
+        uint16_t msg = ((uint16_t)(receivedMessage.identifier));
+        if ((receivedMessage.flags & CAN_MSG_FLAG_RTR) != 0)
+        {
+            msg += 1<<11;
+        }
+        for (temp_index = 0; temp_index < CANmodule->rxSize; temp_index++)
+        {
+            uint16_t msg = (CAN1_RxMsg.StdId << 2) | (CAN1_RxMsg.RTR ? 2 : 0);
+            if (((msg ^ msgBuff->ident) & msgBuff->mask) == 0)
+            {
+                msgMatched = 1;
+                break;
+            }
+            msgBuff++;
+        }
+        //Call specific function, which will process the message
+        if (msgMatched && msgBuff->pFunct)
+        {
+            msgBuff->pFunct(msgBuff->object, &CAN1_RxMsg);
+        }
     }
+    /*   
 
+        
+        
+
+    } else
+    {
+        ESP_LOGE("CO_CANreceive", "Keine Nachrichten in der Queue");
+    }
+*/
     return err;
 }
 
@@ -488,13 +524,13 @@ void CO_CANverifyErrors(CO_CANmodule_t *CANmodule){
     if(CANmodule->errOld != err){
         CANmodule->errOld = err;
 
-        if(txErrors >= 256U){                               /* bus off */
+        if(txErrors >= 256U){                               /* bus off# */
             CO_errorReport(em, CO_EM_CAN_TX_BUS_OFF, CO_EMC_BUS_OFF_RECOVERED, err);
         }
         else{                                               /* not bus off */
             CO_errorReset(em, CO_EM_CAN_TX_BUS_OFF, err);
 
-            if((rxErrors >= 96U) || (txErrors >= 96U)){     /* bus warning */
+            if((rxErrors >= 96U) || (txErrors >= 96U)){     /* bus warning #*/
                 CO_errorReport(em, CO_EM_CAN_BUS_WARNING, CO_EMC_NO_ERROR, err);
             }
 
@@ -518,7 +554,7 @@ void CO_CANverifyErrors(CO_CANmodule_t *CANmodule){
                 }
             }
 
-            if((rxErrors < 96U) && (txErrors < 96U)){       /* no error */
+            if((rxErrors < 96U) && (txErrors < 96U)){       /* no error #*/
                 CO_errorReset(em, CO_EM_CAN_BUS_WARNING, err);
             }
         }

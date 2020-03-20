@@ -91,7 +91,7 @@ void mainTask(void *pvParameter)
       /* Process EEPROM */
 
       /* Wait */
-      vTaskDelay(2000 / portTICK_PERIOD_MS);
+      vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
   }
   /* program exit
