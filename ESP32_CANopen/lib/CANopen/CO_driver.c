@@ -505,9 +505,9 @@ void CO_CANinterrupt(void *args){
     //ESP_LOGI("CO_CANinterrupt","CAN TX: %d RX: %d", esp_can_hw_status.msgs_to_tx,esp_can_hw_status.msgs_to_rx);
     /* receive interrupt */
     if(esp_can_hw_status.msgs_to_rx != 0){
-        ESP_LOGE("CO_CANinterrupt", "Receiving package");
+        //ESP_LOGE("CO_CANinterrupt", "Receiving package");
         can_message_t temp_can_message; //ESP data type can message
-        ESP_ERROR_CHECK(can_receive(&temp_can_message, pdMS_TO_TICKS(CAN_TICKS_TO_WAIT)) == ESP_OK);
+        ESP_ERROR_CHECK(can_receive(&temp_can_message, pdMS_TO_TICKS(CAN_TICKS_TO_WAIT)));
         
         CO_CANrxMsg_t rcvMsg;      /* pointer to received message in CAN module */
         uint16_t index;             /* index of received message */
@@ -565,7 +565,7 @@ void CO_CANinterrupt(void *args){
     /* transmit interrupt */
     /* NOT USED AND NOT IMPLEMENTED*/
     else if(0){
-        ESP_LOGE("CO_CANinterrupt","HOW DID WE GET HERE? (┛ಠ_ಠ)┛彡┻━┻");
+        ESP_LOGE("CO_CANinterrupt","HOW DID WE GET HERE?" /*(┛ಠ_ಠ)┛彡┻━┻"*/);
         /* Clear interrupt flag */
 
         /* First CAN message (bootup) was sent successfully */

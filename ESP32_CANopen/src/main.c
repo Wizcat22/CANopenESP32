@@ -115,7 +115,7 @@ void mainTask(void *pvParameter)
 
       /* Wait */
       
-      vTaskDelay(1000 / portTICK_PERIOD_MS);
+      vTaskDelay(100 / portTICK_PERIOD_MS);
     }
   }
   /* program exit
