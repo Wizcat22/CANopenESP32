@@ -106,7 +106,8 @@ CO_ReturnError_t CO_NMT_init(
 #endif /* CO_USE_LEDS */
 
     /* Configure object variables */
-    NMT->operatingState         = CO_NMT_INITIALIZING;
+    NMT->operatingState         = CO_NMT_OPERATIONAL;
+    #warning "MODIFIED! initial operatingState set to CO_NMT_OPERATIONAL instead of CO_NMT_INITIALIZING"
 #ifdef CO_USE_LEDS
     NMT->LEDgreenRun            = -1;
     NMT->LEDredError            = 1;

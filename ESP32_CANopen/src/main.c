@@ -13,6 +13,7 @@
 #include "esp_timer.h"
 #include "soc/soc.h"
 #include "CANopen.h"
+#include "CO_OD.h"
 
 #define TMR_TASK_INTERVAL (1000)   /* Interval of tmrTask thread in microseconds */
 #define INCREMENT_1MS(var) (var++) /* Increment 1ms variable in tmrTask */
@@ -41,7 +42,7 @@ esp_timer_handle_t periodicTimer;
 void mainTask(void *pvParameter)
 {
   CO_NMT_reset_cmd_t reset = CO_RESET_NOT;
-  OD_powerOnCounter++;
+  //OD_powerOnCounter++;
 
   while (reset != CO_RESET_APP)
   {
@@ -55,9 +56,11 @@ void mainTask(void *pvParameter)
     };
 
     /* initialize CANopen */
-    err = CO_init(&canBase, 10 /* NodeID */, 1000 /* bit rate */);
+    
+    err = CO_init(&canBase, 42 /* NodeID */, 1000 /* bit rate */);
     if (err != CO_ERROR_NO)
     {
+      ESP_LOGE("mainTask", "CO_init failed. Errorcode: %d", err);
       while (1)
         ;
       /* CO_errorReport(CO->em, CO_EM_MEMORY_ALLOCATION_ERROR, CO_EMC_SOFTWARE_INTERNAL, err); */
@@ -67,13 +70,18 @@ void mainTask(void *pvParameter)
     ESP_ERROR_CHECK(esp_timer_create(&timerCallbackArgs, &periodicTimer));
     ESP_ERROR_CHECK(esp_timer_start_periodic(periodicTimer, TMR_TASK_INTERVAL));
     /* Configure CAN transmit and receive interrupt */
-
+    ESP_LOGE("mainTask", "Init Timer");
     /* start CAN */
+
     CO_CANsetNormalMode(CO->CANmodule[0]);
 
     reset = CO_RESET_NOT;
     timer1msPrevious = CO_timer1ms;
-
+    ESP_LOGE("mainTask", "Enter Loop");
+    
+    //CO->NMT->operatingState = CO_NMT_OPERATIONAL; /* WORKAROUND */
+    CO_sendNMTcommand(CO, 0x01 , 0x03); 
+    int q = 0;
     while (reset == CO_RESET_NOT)
     {
       /* loop for normal program execution ******************************************/
@@ -87,11 +95,27 @@ void mainTask(void *pvParameter)
       reset = CO_process(CO, timer1msDiff, NULL);
 
       /* Nonblocking application code may go here. */
-
+      ESP_LOGE("TEST","Winkel: %f", (OD_readAngle[ODA_readAngle_angle]*(float)(57.2958)));
+      ESP_LOGE("TEST","Temperature: %f", (float)((float)(OD_readAnalogueInput16Bit[ODA_readAnalogueInput16Bit_temperature])/8));
+      ESP_LOGE("TEST","lifeCounter: %d", OD_lifeCounter[ODA_lifeCounter_lifeCounter]);
+      ESP_LOGE("TEST", "STATUS-BITS: %d", OD_readInput8Bit[ODA_readInput8Bit_statusbits07]);
+      
+      if (q)
+      {
+        OD_writeOutput8Bit[ODA_writeOutput8Bit_commandbits07] = 0b00000010;
+      }
+      else
+      {
+        OD_writeOutput8Bit[ODA_writeOutput8Bit_commandbits07] = 0b00000000;
+      }
+      CO->TPDO[0]->sendRequest = true;
+      q=~q;
+      
       /* Process EEPROM */
 
       /* Wait */
-      vTaskDelay(2000 / portTICK_PERIOD_MS);
+      
+      vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
   }
   /* program exit

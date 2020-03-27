@@ -361,10 +361,10 @@ CO_ReturnError_t CO_CANsend(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer){
         /*MESSAGE MIT DATEN FÜLLEN*/
         temp_can_message.identifier = buffer->ident;
         temp_can_message.data_length_code = buffer->DLC;
-        temp_can_message.flags = CAN_MSG_FLAG_SELF;
+        //temp_can_message.flags = CAN_MSG_FLAG_SELF;
         if (buffer->rtr)
         {
-            temp_can_message.flags = CAN_MSG_FLAG_RTR | CAN_MSG_FLAG_SELF;
+            temp_can_message.flags = CAN_MSG_FLAG_RTR;
         }
         for (uint8_t i = 0; i < buffer->DLC; i++)
         {
