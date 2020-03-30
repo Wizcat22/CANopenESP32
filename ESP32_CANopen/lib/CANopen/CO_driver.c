@@ -361,10 +361,11 @@ CO_ReturnError_t CO_CANsend(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer){
         /*MESSAGE MIT DATEN FÜLLEN*/
         temp_can_message.identifier = buffer->ident;
         temp_can_message.data_length_code = buffer->DLC;
+        temp_can_message.flags = CAN_MSG_FLAG_NONE;
         //temp_can_message.flags = CAN_MSG_FLAG_SELF;
         if (buffer->rtr)
         {
-            temp_can_message.flags = CAN_MSG_FLAG_RTR;
+            temp_can_message.flags |= CAN_MSG_FLAG_RTR;
         }
         for (uint8_t i = 0; i < buffer->DLC; i++)
         {
@@ -552,7 +553,7 @@ void CO_CANinterrupt(void *args){
                 buffer++;
             }
         }
-
+        ESP_LOGE("CO_CANinterrupt", "DATA: [0]: %d [1]: %d [2]: %d [3]: %d [4]: %d [5]: %d [6]: %d [7]: %d ", temp_can_message.data[0], temp_can_message.data[1], temp_can_message.data[2], temp_can_message.data[3], temp_can_message.data[4], temp_can_message.data[5], temp_can_message.data[6], temp_can_message.data[7]);
         /* Call specific function, which will process the message */
         if(msgMatched && (buffer != NULL) && (buffer->pFunct != NULL)){
             buffer->pFunct(buffer->object, &rcvMsg);
