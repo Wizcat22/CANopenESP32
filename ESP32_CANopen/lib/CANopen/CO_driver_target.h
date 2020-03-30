@@ -159,6 +159,7 @@ extern "C" {
  * CO_SYNC_initCallback() function.
  * @{
  */
+/*TODO: No Lock-System in use. Implement if necessary*/
 #define CO_LOCK_CAN_SEND()  /**< Lock critical section in CO_CANsend() */
 #define CO_UNLOCK_CAN_SEND()/**< Unlock critical section in CO_CANsend() */
 
