@@ -1,13 +1,18 @@
 
 #include "Gyro.h"
 
-/* Return current angle in radian */
-float getAngleRadian(){ 
-  return OD_angleRegister[ODA_angleRegister_angle];
+CO_t *CO_local;
+
+void initGyro(CO_t *CO){
+  CO_local = CO;
 }
 
 /* return current angle in degrees */
-float getAngle(){ 
+float getAngle(bool rad){ 
+  if (rad)
+  {
+    return OD_angleRegister[ODA_angleRegister_angle];
+  }
   return OD_angleRegister[ODA_angleRegister_angle]*(float)(57.2958);
 }
 
@@ -42,25 +47,25 @@ uint8_t GyroParameterError(){
 }
 
 /* Set angle to zero flag. must be checked (confirmAngleSetToZero) and reset (disableAngleToZero) */
-void enableAngleToZero(CO_t *CO){
+void enableAngleToZero(){
   OD_commandRegister[ODA_commandRegister_command] = 0b00000010;
-  CO->TPDO[0]->sendRequest = 1;
+  CO_local->TPDO[0]->sendRequest = 1;
 }
 
 /* Reset angle to zero flag. must be checked (confirmAngleSetToZero) */
-void disableAngleToZero(CO_t *CO){
+void disableAngleToZero(){
   OD_commandRegister[ODA_commandRegister_command] = 0b00000000;
-  CO->TPDO[0]->sendRequest = 1;
+  CO_local->TPDO[0]->sendRequest = 1;
 }
 
 /* Set drift compensation flag. (must be checked (complete) & disabled again)*/
-void enableDriftCompensation(CO_t *CO){
+void enableDriftCompensation(){
   OD_commandRegister[ODA_commandRegister_command] = 0b00000001;
-  CO->TPDO[0]->sendRequest = 1;
+  CO_local->TPDO[0]->sendRequest = 1;
 }
 
 /* Reset drift compensation flag */
-void disableDriftCompensation(CO_t *CO){
+void disableDriftCompensation(){
   OD_commandRegister[ODA_commandRegister_command] = 0b00000000;
-  CO->TPDO[0]->sendRequest = 1;
+  CO_local->TPDO[0]->sendRequest = 1;
 }
