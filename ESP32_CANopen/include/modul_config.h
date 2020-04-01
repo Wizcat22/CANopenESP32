@@ -17,6 +17,14 @@
 
 //----------------------------------
 
+//####  ROS MESSAGE CONFIG  ####
+
+#define MAX_LINEAR_VEL 0.5  /** Maximum linear velocity in m/s */
+#define MAX_ANGULAR_VEL 0.5 /** Maximum angular velocity in rad/s */
+#define MAX_SPEED_LEVEL 5   /** Maximum angular velocity in rad/s */
+
+//----------------------------------
+
 //####  ROSSERIAL CONFIG  ####
 #define ROS_SERVER_AP "ESPNet"
 #define ROS_SERVER_PASS "fb2fe3eda4"
@@ -26,8 +34,8 @@
 //#define CONFIG_ROSSERIAL_OVER_WIFI    /** Use WIFI instead of Serial */
 
 //#define ROS_SERVER_IP "192.168.10.1" /** Rosserial server ip */
-#define ROS_SERVER_IP "192.168.0.27" /** Rosserial server ip (DEV!) */
-#define ROS_SERVER_PORT 11411 /** Rosserial server port */
+#define ROS_SERVER_IP "192.168.0.10" /** Rosserial server ip (DEV!) */
+#define ROS_SERVER_PORT 11511        /** Rosserial server port */
 
 #define UART_PORT UART_NUM_0   /** Serial interface for Rosserial */
 #define UART_TX_PIN GPIO_NUM_1 /** Serial TX Pinnummber */

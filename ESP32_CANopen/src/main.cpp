@@ -17,19 +17,11 @@
 #include "CO_config.h"
 #include "modul_config.h"
 #include "imslROS.h"
-
-extern "C" {
-  // Get declaration for f(int i, char c, float x)
-  #include "Gyro.h"
-}
-
 #include "ros.h"
-
-
-#define GPIO_INPUT_IO_0     (gpio_num_t)(36)
-#define GPIO_INPUT_IO_1     (gpio_num_t)(39)
-#define GPIO_INPUT_PIN_SEL  ((1ULL<<GPIO_INPUT_IO_0) | (1ULL<<GPIO_INPUT_IO_1))
-
+extern "C"
+{
+#include "Hatox.h"
+}
 
 volatile uint16_t coInterruptCounter = 0U; /* variable increments each millisecond */
 
@@ -40,11 +32,8 @@ esp_timer_create_args_t coMainTaskArgs;
 //Timer Handle
 esp_timer_handle_t periodicTimer;
 
-
 void mainTask(void *pvParameter)
 {
-  coMainTaskArgs.callback = &coMainTask;
-  coMainTaskArgs.name = "coMainTask";
   CO_NMT_reset_cmd_t reset = CO_RESET_NOT;
 
   while (reset != CO_RESET_APP)
@@ -59,9 +48,13 @@ void mainTask(void *pvParameter)
     {
       ESP_LOGE("mainTask", "CO_init failed. Errorcode: %d", err);
       CO_errorReport(CO->em, CO_EM_MEMORY_ALLOCATION_ERROR, CO_EMC_SOFTWARE_INTERNAL, err);
-      while (1){}
+      while (1)
+      {
+      }
     }
     /* Configure Timer interrupt function for execution every CO_MAIN_TASK_INTERVAL */
+    coMainTaskArgs.callback = &coMainTask,  /*Timer Interrupt Callback */
+        coMainTaskArgs.name = "coMainTask"; /* Optional Task Name for debugging */
     ESP_ERROR_CHECK(esp_timer_create(&coMainTaskArgs, &periodicTimer));
     ESP_ERROR_CHECK(esp_timer_start_periodic(periodicTimer, CO_MAIN_TASK_INTERVAL));
 
@@ -69,28 +62,14 @@ void mainTask(void *pvParameter)
     CO_CANsetNormalMode(CO->CANmodule[0]);
 
     reset = CO_RESET_NOT;
-    coInterruptCounterPrevious = coInterruptCounter;    
+    coInterruptCounterPrevious = coInterruptCounter;
 
     /*Set Operating Mode of Slave to Operational*/
-    CO_sendNMTcommand(CO, 0x01 , 0x03); 
+    CO_sendNMTcommand(CO, 0x01, 0x03);
 
     /* application init code goes here. */
-
-    //Gyro Drift Compensation status
-    uint8_t DCenabled = 0;
-
-    //gpio configuration
-    gpio_config_t io_conf;
-    //bit mask of the used pins
-    io_conf.pin_bit_mask = GPIO_INPUT_PIN_SEL;
-    //set as input mode    
-    io_conf.mode = GPIO_MODE_INPUT;
-    //enable pull-up mode
-    gpio_config(&io_conf);
-
-    initGyro(CO);
     rosserialSetup();
-
+    /* application init code ends here. */
 
     while (reset == CO_RESET_NOT)
     {
@@ -106,31 +85,7 @@ void mainTask(void *pvParameter)
 
       /* Nonblocking application code may go here. */
 
-      //ESP_LOGI("TEST","Angle: %f", getAngle(false));
-      //ESP_LOGI("TEST","Temperature: %f", getTemperature());
-      ESP_LOGI("TEST","lifeCounter: %d", getLifeCounter());
-      //ESP_LOGI("TEST", "Drift Compensation Active: %d", isDriftCompenstaionActive());
-      //ESP_LOGI("TEST", "Drift Compenstation Complete: %d", isDriftCompenstaionComplete());
-      //ESP_LOGI("TEST", "Set Angle to Zero Confirm: %d", confirmAngleSetToZero());
-      //ESP_LOGI("TEST", "Parameter Error Status: %d", GyroParameterError());
-      if (gpio_get_level(GPIO_INPUT_IO_0))
-      {
-        enableDriftCompensation();
-        DCenabled = 1;
-      }
-      if (DCenabled == 1){
-        if (isDriftCompenstaionComplete()){
-          disableDriftCompensation();
-          DCenabled = 0;
-        }
-      }
-      if (gpio_get_level(GPIO_INPUT_IO_1)){
-        enableAngleToZero();
-      }
-      if (confirmAngleSetToZero()){
-        disableAngleToZero();
-      }  
-
+      //ROS Publish Messages
       rosserialPublish();
       //ROS Handle Messages
       NodeHandleSpin();
@@ -165,15 +120,12 @@ static void coMainTask(void *arg)
 
     /* Write outputs */
     CO_process_TPDO(CO, syncWas, CO_MAIN_TASK_INTERVAL);
-
-
   }
 }
-
-extern "C"{
-void app_main()
+extern "C"
 {
-  xTaskCreate(&mainTask, "mainTask", 4096, NULL, 5, NULL);
-}
-
+  void app_main()
+  {
+    xTaskCreate(&mainTask, "mainTask", 4096, NULL, 5, NULL);
+  }
 }

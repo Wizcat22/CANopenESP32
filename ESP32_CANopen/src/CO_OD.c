@@ -48,17 +48,16 @@ struct sCO_OD_RAM CO_OD_RAM = {
 /*1019*/ 0x0L,
 /*1029*/ {0x0L, 0x1L, 0x0L, 0x0L, 0x0L, 0x0L},
 /*1200*/ {{0x2L, 0x0600L, 0x0580L}},
-/*1400*/ {{0x2L, 0x0183L, 0xffL}},
-/*1600*/ {{0x4L, 0x64030120L, 0x64010110L, 0x60000108L, 0x6f200108L, 0x0000L, 0x0000L, 0x0000L, 0x0000L}},
+/*1400*/ {{0x2L, 0x0183L, 0xffL},
+/*1401*/ {0x2L, 0x0283L, 0xffL}},
+/*1600*/ {{0x5L, 0x60000108L, 0x60000208L, 0x60000308L, 0x60000408L, 0x60000508L, 0x0000L, 0x0000L, 0x0000L},
+/*1601*/ {0x2L, 0x60000608L, 0x60000708L, 0x0000L, 0x0000L, 0x0000L, 0x0000L, 0x0000L, 0x0000L}},
 /*1800*/ {{0x6L, 0x0203L, 0xffL, 0x64, 0x0L, 0x00, 0x0L}},
-/*1a00*/ {{0x1L, 0x62000108L, 0x0000L, 0x0000L, 0x0000L, 0x0000L, 0x0000L, 0x0000L, 0x0000L}},
+/*1a00*/ {{0x8L, 0x62000108L, 0x62000208L, 0x62000308L, 0x62000408L, 0x62000508L, 0x62000608L, 0x62000708L, 0x62000808L}},
 /*1f80*/ 0x0005L,
 /*2100*/ {0x0L},
-/*6000*/ {0x0L},
-/*6200*/ {0x0L},
-/*6401*/ {0x00},
-/*6403*/ {0},
-/*6f20*/ {0x0L},
+/*6000*/ {0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+/*6200*/ {0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
 
            CO_OD_FIRST_LAST_WORD,
 };
@@ -100,6 +99,12 @@ struct sCO_OD_EEPROM CO_OD_EEPROM = {
            {(void*)&CO_OD_RAM.RPDOCommunicationParameter[0].transmissionType, 0x0e, 0x1 },
 };
 
+/*0x1401*/ const CO_OD_entryRecord_t OD_record1401[3] = {
+           {(void*)&CO_OD_RAM.RPDOCommunicationParameter[1].maxSubIndex, 0x06, 0x1 },
+           {(void*)&CO_OD_RAM.RPDOCommunicationParameter[1].COB_IDUsedByRPDO, 0x8e, 0x4 },
+           {(void*)&CO_OD_RAM.RPDOCommunicationParameter[1].transmissionType, 0x0e, 0x1 },
+};
+
 /*0x1600*/ const CO_OD_entryRecord_t OD_record1600[9] = {
            {(void*)&CO_OD_RAM.RPDOMappingParameter[0].numberOfMappedObjects, 0x0e, 0x1 },
            {(void*)&CO_OD_RAM.RPDOMappingParameter[0].mappedObject1, 0x8e, 0x4 },
@@ -110,6 +115,18 @@ struct sCO_OD_EEPROM CO_OD_EEPROM = {
            {(void*)&CO_OD_RAM.RPDOMappingParameter[0].mappedObject6, 0x8e, 0x4 },
            {(void*)&CO_OD_RAM.RPDOMappingParameter[0].mappedObject7, 0x8e, 0x4 },
            {(void*)&CO_OD_RAM.RPDOMappingParameter[0].mappedObject8, 0x8e, 0x4 },
+};
+
+/*0x1601*/ const CO_OD_entryRecord_t OD_record1601[9] = {
+           {(void*)&CO_OD_RAM.RPDOMappingParameter[1].numberOfMappedObjects, 0x06, 0x1 },
+           {(void*)&CO_OD_RAM.RPDOMappingParameter[1].mappedObject1, 0x86, 0x4 },
+           {(void*)&CO_OD_RAM.RPDOMappingParameter[1].mappedObject2, 0x86, 0x4 },
+           {(void*)&CO_OD_RAM.RPDOMappingParameter[1].mappedObject3, 0x86, 0x4 },
+           {(void*)&CO_OD_RAM.RPDOMappingParameter[1].mappedObject4, 0x86, 0x4 },
+           {(void*)&CO_OD_RAM.RPDOMappingParameter[1].mappedObject5, 0x86, 0x4 },
+           {(void*)&CO_OD_RAM.RPDOMappingParameter[1].mappedObject6, 0x86, 0x4 },
+           {(void*)&CO_OD_RAM.RPDOMappingParameter[1].mappedObject7, 0x86, 0x4 },
+           {(void*)&CO_OD_RAM.RPDOMappingParameter[1].mappedObject8, 0x86, 0x4 },
 };
 
 /*0x1800*/ const CO_OD_entryRecord_t OD_record1800[7] = {
@@ -137,7 +154,7 @@ struct sCO_OD_EEPROM CO_OD_EEPROM = {
 /*******************************************************************************
    OBJECT DICTIONARY
 *******************************************************************************/
-const CO_OD_entry_t CO_OD[28] = {
+const CO_OD_entry_t CO_OD[27] = {
 
 {0x1000, 0x00, 0x86, 4, (void*)&CO_OD_RAM.deviceType},
 {0x1001, 0x00, 0x26, 1, (void*)&CO_OD_RAM.errorRegister},
@@ -157,15 +174,14 @@ const CO_OD_entry_t CO_OD[28] = {
 {0x1029, 0x06, 0x0e, 1, (void*)&CO_OD_RAM.errorBehavior[0]},
 {0x1200, 0x02, 0x00, 0, (void*)&OD_record1200},
 {0x1400, 0x02, 0x00, 0, (void*)&OD_record1400},
+{0x1401, 0x02, 0x00, 4, (void*)&OD_record1401},
 {0x1600, 0x08, 0x00, 0, (void*)&OD_record1600},
+{0x1601, 0x08, 0x00, 4, (void*)&OD_record1601},
 {0x1800, 0x06, 0x00, 0, (void*)&OD_record1800},
 {0x1a00, 0x08, 0x00, 0, (void*)&OD_record1a00},
 {0x1f80, 0x00, 0x8e, 4, (void*)&CO_OD_RAM.NMTStartup},
 {0x2100, 0x00, 0x26, 10, (void*)&CO_OD_RAM.errorStatusBits},
-{0x6000, 0x01, 0x3e, 1, (void*)&CO_OD_RAM.statusRegister[0]},
-{0x6200, 0x01, 0x3e, 1, (void*)&CO_OD_RAM.commandRegister[0]},
-{0x6401, 0x01, 0xbe, 2, (void*)&CO_OD_RAM.temperatureRegister[0]},
-{0x6403, 0x01, 0xbe, 4, (void*)&CO_OD_RAM.angleRegister[0]},
-{0x6f20, 0x01, 0x3e, 1, (void*)&CO_OD_RAM.lifeCounterRegister[0]},
+{0x6000, 0x07, 0x3e, 1, (void*)&CO_OD_RAM.statusRegister[0]},
+{0x6200, 0x08, 0x3e, 1, (void*)&CO_OD_RAM.commandRegister[0]},
 };
 // clang-format on

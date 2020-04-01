@@ -55,8 +55,8 @@
    FILE INFO:
       FileName:     
       FileVersion:  1
-      CreationTime: 
-      CreationDate: 
+      CreationTime: 12:05
+      CreationDate: 03-30-2020
       CreatedBy:    Alexander Miller, Mathias Parys
 ******************************************************************************/
 
@@ -75,12 +75,12 @@
 *******************************************************************************/
   #define CO_NO_SYNC                     1   //Associated objects: 1005-1007
   #define CO_NO_EMERGENCY                1   //Associated objects: 1014, 1015
-  #define CO_NO_TIME                       0   //Associated objects: 1012, 1013
+  #define CO_NO_TIME                     0   //Associated objects: 1012, 1013
   #define CO_NO_SDO_SERVER               1   //Associated objects: 1200-127F
   #define CO_NO_SDO_CLIENT               0   //Associated objects: 1280-12FF
   #define CO_NO_LSS_SERVER               0   //LSS Slave
   #define CO_NO_LSS_CLIENT               0   //LSS Master
-  #define CO_NO_RPDO                     1   //Associated objects: 14xx, 16xx
+  #define CO_NO_RPDO                     2   //Associated objects: 14xx, 16xx
   #define CO_NO_TPDO                     1   //Associated objects: 18xx, 1Axx
   #define CO_NO_NMT_MASTER               1
 
@@ -88,7 +88,7 @@
 /*******************************************************************************
    OBJECT DICTIONARY
 *******************************************************************************/
-   #define CO_OD_NoOfElements             28
+   #define CO_OD_NoOfElements             27
 
 
 /*******************************************************************************
@@ -241,6 +241,13 @@
         #define OD_1400_1_RPDOCommunicationParameter_COB_IDUsedByRPDO 1
         #define OD_1400_2_RPDOCommunicationParameter_transmissionType 2
 
+/*1401 */
+        #define OD_1401_RPDOCommunicationParameter                  0x1401
+
+        #define OD_1401_0_RPDOCommunicationParameter_maxSubIndex    0
+        #define OD_1401_1_RPDOCommunicationParameter_COB_IDUsedByRPDO 1
+        #define OD_1401_2_RPDOCommunicationParameter_transmissionType 2
+
 /*1600 */
         #define OD_1600_RPDOMappingParameter                        0x1600
 
@@ -253,6 +260,19 @@
         #define OD_1600_6_RPDOMappingParameter_mappedObject6        6
         #define OD_1600_7_RPDOMappingParameter_mappedObject7        7
         #define OD_1600_8_RPDOMappingParameter_mappedObject8        8
+
+/*1601 */
+        #define OD_1601_RPDOMappingParameter                        0x1601
+
+        #define OD_1601_0_RPDOMappingParameter_maxSubIndex          0
+        #define OD_1601_1_RPDOMappingParameter_mappedObject1        1
+        #define OD_1601_2_RPDOMappingParameter_mappedObject2        2
+        #define OD_1601_3_RPDOMappingParameter_mappedObject3        3
+        #define OD_1601_4_RPDOMappingParameter_mappedObject4        4
+        #define OD_1601_5_RPDOMappingParameter_mappedObject5        5
+        #define OD_1601_6_RPDOMappingParameter_mappedObject6        6
+        #define OD_1601_7_RPDOMappingParameter_mappedObject7        7
+        #define OD_1601_8_RPDOMappingParameter_mappedObject8        8
 
 /*1800 */
         #define OD_1800_TPDOCommunicationParameter                  0x1800
@@ -288,31 +308,26 @@
         #define OD_6000_statusRegister                              0x6000
 
         #define OD_6000_0_statusRegister_maxSubIndex                0
-        #define OD_6000_1_statusRegister_statusbits                 1
+        #define OD_6000_1_statusRegister_analogDat0                 1
+        #define OD_6000_2_statusRegister_analogDat1                 2
+        #define OD_6000_3_statusRegister_analogDat2                 3
+        #define OD_6000_4_statusRegister_analogDat3                 4
+        #define OD_6000_5_statusRegister_analogDat4                 5
+        #define OD_6000_6_statusRegister_digitalDat0                6
+        #define OD_6000_7_statusRegister_digitalDat1                7
 
 /*6200 */
         #define OD_6200_commandRegister                             0x6200
 
         #define OD_6200_0_commandRegister_maxSubIndex               0
-        #define OD_6200_1_commandRegister_command                   1
-
-/*6401 */
-        #define OD_6401_temperatureRegister                         0x6401
-
-        #define OD_6401_0_temperatureRegister_maxSubIndex           0
-        #define OD_6401_1_temperatureRegister_temperature           1
-
-/*6403 */
-        #define OD_6403_angleRegister                               0x6403
-
-        #define OD_6403_0_angleRegister_maxSubIndex                 0
-        #define OD_6403_1_angleRegister_angle                       1
-
-/*6f20 */
-        #define OD_6f20_lifeCounterRegister                         0x6f20
-
-        #define OD_6f20_0_lifeCounterRegister_maxSubIndex           0
-        #define OD_6f20_1_lifeCounterRegister_lifeCounter           1
+        #define OD_6200_1_commandRegister_line                      1
+        #define OD_6200_2_commandRegister_column                    2
+        #define OD_6200_3_commandRegister_char0                     3
+        #define OD_6200_4_commandRegister_char1                     4
+        #define OD_6200_5_commandRegister_char2                     5
+        #define OD_6200_6_commandRegister_char3                     6
+        #define OD_6200_7_commandRegister_char4                     7
+        #define OD_6200_8_commandRegister_char5                     8
 
 /*******************************************************************************
    STRUCTURES FOR VARIABLES IN DIFFERENT MEMORY LOCATIONS
@@ -348,17 +363,14 @@ struct sCO_OD_RAM{
 /*1019      */ UNSIGNED8       synchronousCounterOverflowValue;
 /*1029      */ UNSIGNED8       errorBehavior[6];
 /*1200      */ OD_SDOServerParameter_t SDOServerParameter[1];
-/*1400      */ OD_RPDOCommunicationParameter_t RPDOCommunicationParameter[1];
-/*1600      */ OD_RPDOMappingParameter_t RPDOMappingParameter[1];
+/*1400      */ OD_RPDOCommunicationParameter_t RPDOCommunicationParameter[2];
+/*1600      */ OD_RPDOMappingParameter_t RPDOMappingParameter[2];
 /*1800      */ OD_TPDOCommunicationParameter_t TPDOCommunicationParameter[1];
 /*1a00      */ OD_TPDOMappingParameter_t TPDOMappingParameter[1];
 /*1f80      */ UNSIGNED32      NMTStartup;
 /*2100      */ OCTET_STRING    errorStatusBits[10];
-/*6000      */ UNSIGNED8       statusRegister[1];
-/*6200      */ UNSIGNED8       commandRegister[1];
-/*6401      */ INTEGER16       temperatureRegister[1];
-/*6403      */ REAL32          angleRegister[1];
-/*6f20      */ UNSIGNED8       lifeCounterRegister[1];
+/*6000      */ UNSIGNED8       statusRegister[7];
+/*6200      */ UNSIGNED8       commandRegister[8];
 
                UNSIGNED32     LastWord;
 };
@@ -465,30 +477,28 @@ extern struct sCO_OD_EEPROM CO_OD_EEPROM;
         #define OD_errorStatusBits                                  CO_OD_RAM.errorStatusBits
         #define ODL_errorStatusBits_stringLength                    10
 
-/*6000, Data Type: UNSIGNED8, Array[1] */
+/*6000, Data Type: UNSIGNED8, Array[7] */
         #define OD_statusRegister                                   CO_OD_RAM.statusRegister
-        #define ODL_statusRegister_arrayLength                      1
-        #define ODA_statusRegister_statusbits                       0
+        #define ODL_statusRegister_arrayLength                      7
+        #define ODA_statusRegister_analogDat0                       0
+        #define ODA_statusRegister_analogDat1                       1
+        #define ODA_statusRegister_analogDat2                       2
+        #define ODA_statusRegister_analogDat3                       3
+        #define ODA_statusRegister_analogDat4                       4
+        #define ODA_statusRegister_digitalDat0                      5
+        #define ODA_statusRegister_digitalDat1                      6
 
-/*6200, Data Type: UNSIGNED8, Array[1] */
+/*6200, Data Type: UNSIGNED8, Array[8] */
         #define OD_commandRegister                                  CO_OD_RAM.commandRegister
-        #define ODL_commandRegister_arrayLength                     1
-        #define ODA_commandRegister_command                         0
-
-/*6401, Data Type: INTEGER16, Array[1] */
-        #define OD_temperatureRegister                              CO_OD_RAM.temperatureRegister
-        #define ODL_temperatureRegister_arrayLength                 1
-        #define ODA_temperatureRegister_temperature                 0
-
-/*6403, Data Type: REAL32, Array[1] */
-        #define OD_angleRegister                                    CO_OD_RAM.angleRegister
-        #define ODL_angleRegister_arrayLength                       1
-        #define ODA_angleRegister_angle                             0
-
-/*6f20, Data Type: UNSIGNED8, Array[1] */
-        #define OD_lifeCounterRegister                              CO_OD_RAM.lifeCounterRegister
-        #define ODL_lifeCounterRegister_arrayLength                 1
-        #define ODA_lifeCounterRegister_lifeCounter                 0
+        #define ODL_commandRegister_arrayLength                     8
+        #define ODA_commandRegister_line                            0
+        #define ODA_commandRegister_column                          1
+        #define ODA_commandRegister_char0                           2
+        #define ODA_commandRegister_char1                           3
+        #define ODA_commandRegister_char2                           4
+        #define ODA_commandRegister_char3                           5
+        #define ODA_commandRegister_char4                           6
+        #define ODA_commandRegister_char5                           7
 
 #endif
 // clang-format on

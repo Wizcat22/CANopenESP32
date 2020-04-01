@@ -26,7 +26,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <string.h>
+#include <unistd.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "sdkconfig.h"
+#include "soc/soc.h"
 
 #include "CO_driver.h"
 #include "CO_Emergency.h"
@@ -38,6 +43,9 @@
 #include "esp_log.h"
 #include "driver/gpio.h"
 #include "driver/can.h"
+#include "esp_timer.h"
+
+
 
 CO_CANmodule_t* CANmodulePointer = NULL;
 
