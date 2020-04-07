@@ -53,11 +53,11 @@
 
 /*******************************************************************************
    FILE INFO:
-      FileName:     
+      FileName:     clean-dunker-BG45CI.eds
       FileVersion:  1
-      CreationTime: 
-      CreationDate: 
-      CreatedBy:    Alexander Miller, Mathias Parys
+      CreationTime: 12:05PM
+      CreationDate: 03-30-2020
+      CreatedBy:    Alexander Miller
 ******************************************************************************/
 
 
@@ -75,9 +75,9 @@
 *******************************************************************************/
   #define CO_NO_SYNC                     1   //Associated objects: 1005-1007
   #define CO_NO_EMERGENCY                1   //Associated objects: 1014, 1015
-  #define CO_NO_TIME                       0   //Associated objects: 1012, 1013
+  #define CO_NO_TIME                     0   //Associated objects: 1012, 1013
   #define CO_NO_SDO_SERVER               1   //Associated objects: 1200-127F
-  #define CO_NO_SDO_CLIENT               0   //Associated objects: 1280-12FF
+  #define CO_NO_SDO_CLIENT               1   //Associated objects: 1280-12FF
   #define CO_NO_LSS_SERVER               0   //LSS Slave
   #define CO_NO_LSS_CLIENT               0   //LSS Master
   #define CO_NO_RPDO                     1   //Associated objects: 14xx, 16xx
@@ -88,7 +88,7 @@
 /*******************************************************************************
    OBJECT DICTIONARY
 *******************************************************************************/
-   #define CO_OD_NoOfElements             28
+   #define CO_OD_NoOfElements             24
 
 
 /*******************************************************************************
@@ -106,6 +106,12 @@
                UNSIGNED32     COB_IDClientToServer;
                UNSIGNED32     COB_IDServerToClient;
                }              OD_SDOServerParameter_t;
+/*1280    */ typedef struct {
+               UNSIGNED8      maxSubIndex;
+               UNSIGNED32     COB_IDClientToServer;
+               UNSIGNED32     COB_IDServerToClient;
+               UNSIGNED8      nodeIDOfTheSDOServer;
+               }              OD_SDOClientParameter_t;
 /*1400    */ typedef struct {
                UNSIGNED8      maxSubIndex;
                UNSIGNED32     COB_IDUsedByRPDO;
@@ -181,10 +187,10 @@
         #define OD_1008_manufacturerDeviceName                      0x1008
 
 /*1009 */
-        #define OD_1009_manufacturerHardwareVersion                 0x1009
+        #define OD_1009_hardwareVersion                             0x1009
 
 /*100a */
-        #define OD_100a_manufacturerSoftwareVersion                 0x100a
+        #define OD_100a_softwareVersion                             0x100a
 
 /*1014 */
         #define OD_1014_COB_ID_EMCY                                 0x1014
@@ -233,6 +239,14 @@
         #define OD_1200_0_SDOServerParameter_maxSubIndex            0
         #define OD_1200_1_SDOServerParameter_COB_IDClientToServer   1
         #define OD_1200_2_SDOServerParameter_COB_IDServerToClient   2
+
+/*1280 */
+        #define OD_1280_SDOClientParameter                          0x1280
+
+        #define OD_1280_0_SDOClientParameter_maxSubIndex            0
+        #define OD_1280_1_SDOClientParameter_COB_IDClientToServer   1
+        #define OD_1280_2_SDOClientParameter_COB_IDServerToClient   2
+        #define OD_1280_3_SDOClientParameter_nodeIDOfTheSDOServer   3
 
 /*1400 */
         #define OD_1400_RPDOCommunicationParameter                  0x1400
@@ -284,36 +298,6 @@
 /*2100 */
         #define OD_2100_errorStatusBits                             0x2100
 
-/*6000 */
-        #define OD_6000_statusRegister                              0x6000
-
-        #define OD_6000_0_statusRegister_maxSubIndex                0
-        #define OD_6000_1_statusRegister_statusbits                 1
-
-/*6200 */
-        #define OD_6200_commandRegister                             0x6200
-
-        #define OD_6200_0_commandRegister_maxSubIndex               0
-        #define OD_6200_1_commandRegister_command                   1
-
-/*6401 */
-        #define OD_6401_temperatureRegister                         0x6401
-
-        #define OD_6401_0_temperatureRegister_maxSubIndex           0
-        #define OD_6401_1_temperatureRegister_temperature           1
-
-/*6403 */
-        #define OD_6403_angleRegister                               0x6403
-
-        #define OD_6403_0_angleRegister_maxSubIndex                 0
-        #define OD_6403_1_angleRegister_angle                       1
-
-/*6f20 */
-        #define OD_6f20_lifeCounterRegister                         0x6f20
-
-        #define OD_6f20_0_lifeCounterRegister_maxSubIndex           0
-        #define OD_6f20_1_lifeCounterRegister_lifeCounter           1
-
 /*******************************************************************************
    STRUCTURES FOR VARIABLES IN DIFFERENT MEMORY LOCATIONS
 *******************************************************************************/
@@ -323,6 +307,10 @@
 struct sCO_OD_ROM{
                UNSIGNED32     FirstWord;
 
+/*1400      */ OD_RPDOCommunicationParameter_t RPDOCommunicationParameter[1];
+/*1600      */ OD_RPDOMappingParameter_t RPDOMappingParameter[1];
+/*1800      */ OD_TPDOCommunicationParameter_t TPDOCommunicationParameter[1];
+/*1a00      */ OD_TPDOMappingParameter_t TPDOMappingParameter[1];
 
                UNSIGNED32     LastWord;
 };
@@ -338,8 +326,8 @@ struct sCO_OD_RAM{
 /*1006      */ UNSIGNED32      communicationCyclePeriod;
 /*1007      */ UNSIGNED32      synchronousWindowLength;
 /*1008      */ VISIBLE_STRING  manufacturerDeviceName[13];
-/*1009      */ VISIBLE_STRING  manufacturerHardwareVersion[4];
-/*100a      */ VISIBLE_STRING  manufacturerSoftwareVersion[4];
+/*1009      */ VISIBLE_STRING  hardwareVersion[4];
+/*100a      */ VISIBLE_STRING  softwareVersion[4];
 /*1014      */ UNSIGNED32      COB_ID_EMCY;
 /*1015      */ UNSIGNED16      inhibitTimeEMCY;
 /*1016      */ UNSIGNED32      consumerHeartbeatTime[4];
@@ -348,17 +336,9 @@ struct sCO_OD_RAM{
 /*1019      */ UNSIGNED8       synchronousCounterOverflowValue;
 /*1029      */ UNSIGNED8       errorBehavior[6];
 /*1200      */ OD_SDOServerParameter_t SDOServerParameter[1];
-/*1400      */ OD_RPDOCommunicationParameter_t RPDOCommunicationParameter[1];
-/*1600      */ OD_RPDOMappingParameter_t RPDOMappingParameter[1];
-/*1800      */ OD_TPDOCommunicationParameter_t TPDOCommunicationParameter[1];
-/*1a00      */ OD_TPDOMappingParameter_t TPDOMappingParameter[1];
+/*1280      */ OD_SDOClientParameter_t SDOClientParameter[1];
 /*1f80      */ UNSIGNED32      NMTStartup;
 /*2100      */ OCTET_STRING    errorStatusBits[10];
-/*6000      */ UNSIGNED8       statusRegister[1];
-/*6200      */ UNSIGNED8       commandRegister[1];
-/*6401      */ INTEGER16       temperatureRegister[1];
-/*6403      */ REAL32          angleRegister[1];
-/*6f20      */ UNSIGNED8       lifeCounterRegister[1];
 
                UNSIGNED32     LastWord;
 };
@@ -406,12 +386,12 @@ extern struct sCO_OD_EEPROM CO_OD_EEPROM;
         #define ODL_manufacturerDeviceName_stringLength             13
 
 /*1009, Data Type: VISIBLE_STRING */
-        #define OD_manufacturerHardwareVersion                      CO_OD_RAM.manufacturerHardwareVersion
-        #define ODL_manufacturerHardwareVersion_stringLength        4
+        #define OD_hardwareVersion                                  CO_OD_RAM.hardwareVersion
+        #define ODL_hardwareVersion_stringLength                    4
 
 /*100a, Data Type: VISIBLE_STRING */
-        #define OD_manufacturerSoftwareVersion                      CO_OD_RAM.manufacturerSoftwareVersion
-        #define ODL_manufacturerSoftwareVersion_stringLength        4
+        #define OD_softwareVersion                                  CO_OD_RAM.softwareVersion
+        #define ODL_softwareVersion_stringLength                    4
 
 /*1014, Data Type: UNSIGNED32 */
         #define OD_COB_ID_EMCY                                      CO_OD_RAM.COB_ID_EMCY
@@ -446,17 +426,20 @@ extern struct sCO_OD_EEPROM CO_OD_EEPROM;
 /*1200, Data Type: SDOServerParameter_t */
         #define OD_SDOServerParameter                               CO_OD_RAM.SDOServerParameter
 
+/*1280, Data Type: SDOClientParameter_t */
+        #define OD_SDOClientParameter                               CO_OD_RAM.SDOClientParameter
+
 /*1400, Data Type: RPDOCommunicationParameter_t */
-        #define OD_RPDOCommunicationParameter                       CO_OD_RAM.RPDOCommunicationParameter
+        #define OD_RPDOCommunicationParameter                       CO_OD_ROM.RPDOCommunicationParameter
 
 /*1600, Data Type: RPDOMappingParameter_t */
-        #define OD_RPDOMappingParameter                             CO_OD_RAM.RPDOMappingParameter
+        #define OD_RPDOMappingParameter                             CO_OD_ROM.RPDOMappingParameter
 
 /*1800, Data Type: TPDOCommunicationParameter_t */
-        #define OD_TPDOCommunicationParameter                       CO_OD_RAM.TPDOCommunicationParameter
+        #define OD_TPDOCommunicationParameter                       CO_OD_ROM.TPDOCommunicationParameter
 
 /*1a00, Data Type: TPDOMappingParameter_t */
-        #define OD_TPDOMappingParameter                             CO_OD_RAM.TPDOMappingParameter
+        #define OD_TPDOMappingParameter                             CO_OD_ROM.TPDOMappingParameter
 
 /*1f80, Data Type: UNSIGNED32 */
         #define OD_NMTStartup                                       CO_OD_RAM.NMTStartup
@@ -464,31 +447,6 @@ extern struct sCO_OD_EEPROM CO_OD_EEPROM;
 /*2100, Data Type: OCTET_STRING */
         #define OD_errorStatusBits                                  CO_OD_RAM.errorStatusBits
         #define ODL_errorStatusBits_stringLength                    10
-
-/*6000, Data Type: UNSIGNED8, Array[1] */
-        #define OD_statusRegister                                   CO_OD_RAM.statusRegister
-        #define ODL_statusRegister_arrayLength                      1
-        #define ODA_statusRegister_statusbits                       0
-
-/*6200, Data Type: UNSIGNED8, Array[1] */
-        #define OD_commandRegister                                  CO_OD_RAM.commandRegister
-        #define ODL_commandRegister_arrayLength                     1
-        #define ODA_commandRegister_command                         0
-
-/*6401, Data Type: INTEGER16, Array[1] */
-        #define OD_temperatureRegister                              CO_OD_RAM.temperatureRegister
-        #define ODL_temperatureRegister_arrayLength                 1
-        #define ODA_temperatureRegister_temperature                 0
-
-/*6403, Data Type: REAL32, Array[1] */
-        #define OD_angleRegister                                    CO_OD_RAM.angleRegister
-        #define ODL_angleRegister_arrayLength                       1
-        #define ODA_angleRegister_angle                             0
-
-/*6f20, Data Type: UNSIGNED8, Array[1] */
-        #define OD_lifeCounterRegister                              CO_OD_RAM.lifeCounterRegister
-        #define ODL_lifeCounterRegister_arrayLength                 1
-        #define ODA_lifeCounterRegister_lifeCounter                 0
 
 #endif
 // clang-format on

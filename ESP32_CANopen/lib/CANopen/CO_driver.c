@@ -27,7 +27,24 @@
  * limitations under the License.
  */
 
-
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/gpio.h"
+#include "sdkconfig.h"
+#include "esp_err.h"
+#include "esp_log.h"
+#include <stdlib.h>
+#include <stdint.h>
+#include "driver/can.h"
+#include "esp_timer.h"
+#include "soc/soc.h"
+#include "CANopen.h"
+#include "CO_OD.h"
+#include "CO_config.h"
+#include "modul_config.h"
 #include "CO_driver.h"
 #include "CO_Emergency.h"
 #include "CO_config.h"
@@ -39,41 +56,41 @@
 #include "driver/gpio.h"
 #include "driver/can.h"
 
-CO_CANmodule_t* CANmodulePointer = NULL;
+CO_CANmodule_t *CANmodulePointer = NULL;
 
 //CAN Timing configuration
-  static can_timing_config_t timingConfig = CAN_TIMING_CONFIG_1MBITS(); //Set Baudrate to 1Mbit
-//CAN Filter configuration
-  static can_filter_config_t filterConfig = CAN_FILTER_CONFIG_ACCEPT_ALL(); //Disable Message Filter
-//CAN General configuration
-  static can_general_config_t generalConfig = {.mode = CAN_MODE_NORMAL,
-   .tx_io = CAN_TX_IO, /*TX IO Pin (CO_config.h)*/
-   .rx_io = CAN_RX_IO, /*RX IO Pin (CO_config.h)*/
-   .clkout_io = CAN_IO_UNUSED, /*No clockout pin*/
-   .bus_off_io = CAN_IO_UNUSED, /*No busoff pin*/
-   .tx_queue_len = CAN_TX_QUEUE_LENGTH, /*ESP TX Buffer Size (CO_config.h)*/
-   .rx_queue_len = CAN_RX_QUEUE_LENGTH, /*ESP RX Buffer Size (CO_config.h)*/
-   .alerts_enabled = CAN_ALERT_NONE, /*Disable CAN Alarms TODO: Enable for CO_CANverifyErrors*/
-   .clkout_divider = 0 }; /*No Clockout*/
-
+static can_timing_config_t timingConfig = CAN_TIMING_CONFIG_1MBITS();     //Set Baudrate to 1Mbit
+                                                                          //CAN Filter configuration
+static can_filter_config_t filterConfig = CAN_FILTER_CONFIG_ACCEPT_ALL(); //Disable Message Filter
+                                                                          //CAN General configuration
+static can_general_config_t generalConfig = {.mode = CAN_MODE_NORMAL,
+                                             .tx_io = CAN_TX_IO,                  /*TX IO Pin (CO_config.h)*/
+                                             .rx_io = CAN_RX_IO,                  /*RX IO Pin (CO_config.h)*/
+                                             .clkout_io = CAN_IO_UNUSED,          /*No clockout pin*/
+                                             .bus_off_io = CAN_IO_UNUSED,         /*No busoff pin*/
+                                             .tx_queue_len = CAN_TX_QUEUE_LENGTH, /*ESP TX Buffer Size (CO_config.h)*/
+                                             .rx_queue_len = CAN_RX_QUEUE_LENGTH, /*ESP RX Buffer Size (CO_config.h)*/
+                                             .alerts_enabled = CAN_ALERT_NONE,    /*Disable CAN Alarms TODO: Enable for CO_CANverifyErrors*/
+                                             .clkout_divider = 0};                /*No Clockout*/
 
 //Timer Interrupt Configuration
 const esp_timer_create_args_t CO_CANinterruptArgs = {
     .callback = &CO_CANinterrupt, /*Timer Interrupt Callback */
-    .name = "CO_CANinterrupt"}; /* Optional Task Name for debugging */
+    .name = "CO_CANinterrupt"};   /* Optional Task Name for debugging */
 
 //Timer Handle
 esp_timer_handle_t CO_CANinterruptPeriodicTimer;
 
 /******************************************************************************/
-void CO_CANsetConfigurationMode(void *CANdriverState){
+void CO_CANsetConfigurationMode(void *CANdriverState)
+{
     /* Put CAN module in configuration mode */
-    (void) CANdriverState;
+    (void)CANdriverState;
 }
 
-
 /******************************************************************************/
-void CO_CANsetNormalMode(CO_CANmodule_t *CANmodule){
+void CO_CANsetNormalMode(CO_CANmodule_t *CANmodule)
+{
     /*Install CAN driver*/
     ESP_ERROR_CHECK(can_driver_install(&generalConfig, &timingConfig, &filterConfig));
     /*Start CAN Controller*/
@@ -87,23 +104,22 @@ void CO_CANsetNormalMode(CO_CANmodule_t *CANmodule){
     CANmodule->CANnormal = true;
 }
 
-
 /******************************************************************************/
 CO_ReturnError_t CO_CANmodule_init(
-        CO_CANmodule_t         *CANmodule,
-        void                   *CANdriverState,
-        CO_CANrx_t              rxArray[],
-        uint16_t                rxSize,
-        CO_CANtx_t              txArray[],
-        uint16_t                txSize,
-        uint16_t                CANbitRate)
+    CO_CANmodule_t *CANmodule,
+    void *CANdriverState,
+    CO_CANrx_t rxArray[],
+    uint16_t rxSize,
+    CO_CANtx_t txArray[],
+    uint16_t txSize,
+    uint16_t CANbitRate)
 {
     CANmodulePointer = CANmodule;
-    
 
     /* verify arguments */
-    if(CANmodule==NULL || rxArray==NULL || txArray==NULL){
-        ESP_LOGE("CO_CANmodule_init","Verify arguments! (Nullpointer in CANmodule|rxArray|txArray)");
+    if (CANmodule == NULL || rxArray == NULL || txArray == NULL)
+    {
+        ESP_LOGE("CO_CANmodule_init", "Verify arguments! (Nullpointer in CANmodule|rxArray|txArray)");
         return CO_ERROR_ILLEGAL_ARGUMENT;
     }
 
@@ -124,22 +140,19 @@ CO_ReturnError_t CO_CANmodule_init(
     CANmodule->errOld = 0U;
     CANmodule->em = NULL;
 
-
     /*Init RX-Array*/
-    for(uint16_t i=0U; i<rxSize; i++){
+    for (uint16_t i = 0U; i < rxSize; i++)
+    {
         CANmodule->rxArray[i].ident = 0U;
         CANmodule->rxArray[i].mask = (uint16_t)0xFFFFFFFFU;
         CANmodule->rxArray[i].object = NULL;
         CANmodule->rxArray[i].pFunct = NULL;
     }
     /*Init TX-Array*/
-    for(uint16_t i=0U; i<txSize; i++){
+    for (uint16_t i = 0U; i < txSize; i++)
+    {
         CANmodule->txArray[i].bufferFull = false;
     }
-
-
-
-
 
     /* Configure CAN module registers */
     generalConfig.mode = CAN_MODE_NORMAL;
@@ -152,10 +165,10 @@ CO_ReturnError_t CO_CANmodule_init(
     generalConfig.alerts_enabled = CAN_ALERT_ALL;
     generalConfig.clkout_divider = 0;
 
-
     /* Configure CAN timing */
-    switch(CANmodule->baudrate){
-        case 25: 
+    switch (CANmodule->baudrate)
+    {
+    case 25:
         //Set Baudrate to 25kbit;
         timingConfig.brp = 128;
         timingConfig.tseg_1 = 16;
@@ -163,7 +176,7 @@ CO_ReturnError_t CO_CANmodule_init(
         timingConfig.sjw = 3;
         timingConfig.triple_sampling = false;
         break;
-        case 50:
+    case 50:
         //Set Baudrate to 50kbit;
         timingConfig.brp = 80;
         timingConfig.tseg_1 = 15;
@@ -171,7 +184,7 @@ CO_ReturnError_t CO_CANmodule_init(
         timingConfig.sjw = 3;
         timingConfig.triple_sampling = false;
         break;
-        case 100:
+    case 100:
         //Set Baudrate to 100kbit;
         timingConfig.brp = 40;
         timingConfig.tseg_1 = 15;
@@ -179,7 +192,7 @@ CO_ReturnError_t CO_CANmodule_init(
         timingConfig.sjw = 3;
         timingConfig.triple_sampling = false;
         break;
-        case 125:
+    case 125:
         //Set Baudrate to 125kbit;
         timingConfig.brp = 32;
         timingConfig.tseg_1 = 15;
@@ -187,7 +200,7 @@ CO_ReturnError_t CO_CANmodule_init(
         timingConfig.sjw = 3;
         timingConfig.triple_sampling = false;
         break;
-        case 250:
+    case 250:
         //Set Baudrate to 250kbit;
         timingConfig.brp = 16;
         timingConfig.tseg_1 = 15;
@@ -195,7 +208,7 @@ CO_ReturnError_t CO_CANmodule_init(
         timingConfig.sjw = 3;
         timingConfig.triple_sampling = false;
         break;
-        case 500:
+    case 500:
         //Set Baudrate to 500kbit;
         timingConfig.brp = 8;
         timingConfig.tseg_1 = 15;
@@ -203,7 +216,7 @@ CO_ReturnError_t CO_CANmodule_init(
         timingConfig.sjw = 3;
         timingConfig.triple_sampling = false;
         break;
-        case 800:
+    case 800:
         //Set Baudrate to 800kbit;
         timingConfig.brp = 4;
         timingConfig.tseg_1 = 16;
@@ -211,7 +224,7 @@ CO_ReturnError_t CO_CANmodule_init(
         timingConfig.sjw = 3;
         timingConfig.triple_sampling = false;
         break;
-        case 1000:
+    case 1000:
         //Set Baudrate to 1Mbit;
         timingConfig.brp = 4;
         timingConfig.tseg_1 = 15;
@@ -219,8 +232,8 @@ CO_ReturnError_t CO_CANmodule_init(
         timingConfig.sjw = 3;
         timingConfig.triple_sampling = false;
         break;
-        default:
-        ESP_LOGE("CO_driver","%d => Invalid Baudrate! Using 1Mbit as default!",CANmodule->baudrate);
+    default:
+        ESP_LOGE("CO_driver", "%d => Invalid Baudrate! Using 1Mbit as default!", CANmodule->baudrate);
         //Set Baudrate to 1Mbit;
         timingConfig.brp = 4;
         timingConfig.tseg_1 = 15;
@@ -229,22 +242,22 @@ CO_ReturnError_t CO_CANmodule_init(
         timingConfig.triple_sampling = false;
     }
 
-    
-
     /* Configure CAN module hardware filters */
-    if(CANmodule->useCANrxFilters){
+    if (CANmodule->useCANrxFilters)
+    {
         /* CAN module filters are used, they will be configured with */
         /* CO_CANrxBufferInit() functions, called by separate CANopen */
         /* init functions. */
         /* Configure all masks so, that received message must match filter */
-        
+
         //Don't filter messages
-        ESP_LOGI("CO_driver","RxFilters are active, but no filter configured.");
+        ESP_LOGI("CO_driver", "RxFilters are active, but no filter configured.");
         filterConfig.acceptance_code = 0;
         filterConfig.acceptance_mask = 0xFFFFFFFF;
         filterConfig.single_filter = true;
     }
-    else{
+    else
+    {
         /* CAN module filters are not used, all messages with standard 11-bit */
         /* identifier will be received */
         /* Configure mask 0 so, that all messages with standard identifier are accepted */
@@ -256,35 +269,34 @@ CO_ReturnError_t CO_CANmodule_init(
     return CO_ERROR_NO;
 }
 
-
 /******************************************************************************/
-void CO_CANmodule_disable(CO_CANmodule_t *CANmodule){
+void CO_CANmodule_disable(CO_CANmodule_t *CANmodule)
+{
     /* turn off the module */
     ESP_ERROR_CHECK(can_stop());
 }
 
-
 /******************************************************************************/
-uint16_t CO_CANrxMsg_readIdent(const CO_CANrxMsg_t *rxMsg){
+uint16_t CO_CANrxMsg_readIdent(const CO_CANrxMsg_t *rxMsg)
+{
     /* Return CAN-Message Identifier*/
-    return (uint16_t) rxMsg->ident;
+    return (uint16_t)rxMsg->ident;
 }
-
-
 
 /******************************************************************************/
 CO_ReturnError_t CO_CANrxBufferInit(
-        CO_CANmodule_t         *CANmodule,
-        uint16_t                index,
-        uint16_t                ident,
-        uint16_t                mask,
-        bool_t                  rtr,
-        void                   *object,
-        void                  (*pFunct)(void *object, const CO_CANrxMsg_t *message))
+    CO_CANmodule_t *CANmodule,
+    uint16_t index,
+    uint16_t ident,
+    uint16_t mask,
+    bool_t rtr,
+    void *object,
+    void (*pFunct)(void *object, const CO_CANrxMsg_t *message))
 {
     CO_ReturnError_t ret = CO_ERROR_NO;
 
-    if((CANmodule!=NULL) && (object!=NULL) && (pFunct!=NULL) && (index < CANmodule->rxSize)){
+    if ((CANmodule != NULL) && (object != NULL) && (pFunct != NULL) && (index < CANmodule->rxSize))
+    {
         /* buffer, which will be configured */
         CO_CANrx_t *buffer = &CANmodule->rxArray[index];
 
@@ -294,18 +306,21 @@ CO_ReturnError_t CO_CANrxBufferInit(
 
         /* CAN identifier and CAN mask, bit aligned with CAN module. Different on different microcontrollers. */
         buffer->ident = ident & 0x07FFU;
-        if(rtr){
+        if (rtr)
+        {
             buffer->ident |= 0x0800U;
         }
         buffer->mask = (mask & 0x07FFU) | 0x0800U;
 
         /* Set CAN hardware module filter and mask. */
-        if(CANmodule->useCANrxFilters){
-            ESP_LOGE("CO_CANrxBufferInit","No driver implementation for Filters");
+        if (CANmodule->useCANrxFilters)
+        {
+            ESP_LOGE("CO_CANrxBufferInit", "No driver implementation for Filters");
         }
     }
-    else{
-        ESP_LOGE("CO_CANrxBufferInit","((CANmodule!=NULL) && (object!=NULL) && (pFunct!=NULL) && (index < CANmodule->rxSize))==FALSE");
+    else
+    {
+        ESP_LOGE("CO_CANrxBufferInit", "((CANmodule!=NULL) && (object!=NULL) && (pFunct!=NULL) && (index < CANmodule->rxSize))==FALSE");
         ret = CO_ERROR_ILLEGAL_ARGUMENT;
     }
 
@@ -314,77 +329,88 @@ CO_ReturnError_t CO_CANrxBufferInit(
 
 /******************************************************************************/
 CO_CANtx_t *CO_CANtxBufferInit(
-        CO_CANmodule_t         *CANmodule,
-        uint16_t                index,
-        uint16_t                ident,
-        bool_t                  rtr,
-        uint8_t                 noOfBytes,
-        bool_t                  syncFlag)
+    CO_CANmodule_t *CANmodule,
+    uint16_t index,
+    uint16_t ident,
+    bool_t rtr,
+    uint8_t noOfBytes,
+    bool_t syncFlag)
 {
     CO_CANtx_t *buffer = NULL;
 
-    if((CANmodule != NULL) && (index < CANmodule->txSize)){
+    if ((CANmodule != NULL) && (index < CANmodule->txSize))
+    {
         /* get specific buffer */
         buffer = &CANmodule->txArray[index];
 
         /* CAN identifier, DLC and rtr, bit aligned with CAN module transmit buffer. */
         /* Convert data from library message into esp message values */
-        buffer->ident = ((uint32_t)ident & 0x07FFU);    /* Set Message ID (Standard frame), delete other informations */
-        buffer->rtr = rtr;                              /* Set RTR Flag */
-        buffer->DLC = noOfBytes;                        /* Set number of bytes */
-        buffer->bufferFull = false;                     /* Set buffer full flag */
-        buffer->syncFlag = syncFlag;                    /* Set sync flag */
-    } else
+        buffer->ident = ((uint32_t)ident & 0x07FFU); /* Set Message ID (Standard frame), delete other informations */
+        buffer->rtr = rtr;                           /* Set RTR Flag */
+        buffer->DLC = noOfBytes;                     /* Set number of bytes */
+        buffer->bufferFull = false;                  /* Set buffer full flag */
+        buffer->syncFlag = syncFlag;                 /* Set sync flag */
+    }
+    else
     {
-        ESP_LOGE("CO_CANtxBufferInit","CANmodule not initialized or index out of bound of txSize");
+        ESP_LOGE("CO_CANtxBufferInit", "CANmodule not initialized or index out of bound of txSize");
     }
     return buffer;
 }
 
 /******************************************************************************/
-CO_ReturnError_t CO_CANsend(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer){
+CO_ReturnError_t CO_CANsend(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer)
+{
     CO_ReturnError_t err = CO_ERROR_NO;
-    can_status_info_t esp_can_hw_status;    /* Define variable for hardware status of esp can interface */
-    ESP_ERROR_CHECK(can_get_status_info(&esp_can_hw_status));   /* Get hardware status of esp can interface */
+    can_status_info_t esp_can_hw_status;                      /* Define variable for hardware status of esp can interface */
+    ESP_ERROR_CHECK(can_get_status_info(&esp_can_hw_status)); /* Get hardware status of esp can interface */
 
     /* Verify overflow */
-    if(buffer->bufferFull){
-        if(!CANmodule->firstCANtxMessage){
+    if (buffer->bufferFull)
+    {
+        if (!CANmodule->firstCANtxMessage)
+        {
             /* don't set error, if bootup message is still on buffers */
-            CO_errorReport((CO_EM_t*)CANmodule->em, CO_EM_CAN_TX_OVERFLOW, CO_EMC_CAN_OVERRUN, buffer->ident);
+            CO_errorReport((CO_EM_t *)CANmodule->em, CO_EM_CAN_TX_OVERFLOW, CO_EMC_CAN_OVERRUN, buffer->ident);
         }
         err = CO_ERROR_TX_OVERFLOW;
-        ESP_LOGE("CO_CANsend","CAN-tx-buffer overflow");
+        ESP_LOGE("CO_CANsend", "CAN-tx-buffer overflow");
     }
 
     CO_LOCK_CAN_SEND();
     /* if CAN TX buffer is free, copy message to it */
-    if((esp_can_hw_status.msgs_to_tx < CAN_TX_QUEUE_LENGTH) && (CANmodule->CANtxCount == 0)){
+    if ((esp_can_hw_status.msgs_to_tx < CAN_TX_QUEUE_LENGTH) && (CANmodule->CANtxCount == 0))
+    {
         CANmodule->bufferInhibitFlag = buffer->syncFlag;
-        can_message_t temp_can_message;                     /* generate esp can message for transmission */
+        can_message_t temp_can_message; /* generate esp can message for transmission */
         /*MESSAGE MIT DATEN FÜLLEN*/
-        temp_can_message.identifier = buffer->ident;        /* Set message-id in esp can message */
-        temp_can_message.data_length_code = buffer->DLC;    /* Set data length in esp can message */
-        temp_can_message.flags = CAN_MSG_FLAG_NONE;         /* reset all flags in esp can message */
+        temp_can_message.identifier = buffer->ident;     /* Set message-id in esp can message */
+        temp_can_message.data_length_code = buffer->DLC; /* Set data length in esp can message */
+        temp_can_message.flags = CAN_MSG_FLAG_NONE;      /* reset all flags in esp can message */
         //temp_can_message.flags = CAN_MSG_FLAG_SELF;
         if (buffer->rtr)
         {
-            temp_can_message.flags |= CAN_MSG_FLAG_RTR;     /* set rtr-flag if needed */
+            temp_can_message.flags |= CAN_MSG_FLAG_RTR; /* set rtr-flag if needed */
         }
         for (uint8_t i = 0; i < buffer->DLC; i++)
         {
-            temp_can_message.data[i] = buffer->data[i];     /* copy data from buffer in esp can message */
+            temp_can_message.data[i] = buffer->data[i]; /* copy data from buffer in esp can message */
         }
         /* Transmit esp can message.  */
-        if (can_transmit(&temp_can_message, pdMS_TO_TICKS(CAN_TICKS_TO_WAIT)) == ESP_OK) {
-        } else {
+        if (can_transmit(&temp_can_message, pdMS_TO_TICKS(CAN_TICKS_TO_WAIT)) == ESP_OK)
+        {
+            ESP_LOGI("CANsend", "ID: %d , Data %d", temp_can_message.identifier, temp_can_message.data[0]);
+        }
+        else
+        {
             err = CO_ERROR_TIMEOUT;
-            ESP_LOGE("CO_CANsend","Failed to queue message for transmission");
+            ESP_LOGE("CO_CANsend", "Failed to queue message for transmission");
         }
     }
     /* if no buffer is free, message will be sent by interrupt */
-    else{
-        ESP_LOGE("CO_CANsend","CAN-tx-buffer overflow");
+    else
+    {
+        ESP_LOGE("CO_CANsend", "CAN-tx-buffer overflow");
         buffer->bufferFull = true;
         CANmodule->CANtxCount++;
     }
@@ -393,11 +419,11 @@ CO_ReturnError_t CO_CANsend(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer){
     return err;
 }
 
-
 /******************************************************************************/
-void CO_CANclearPendingSyncPDOs(CO_CANmodule_t *CANmodule){
+void CO_CANclearPendingSyncPDOs(CO_CANmodule_t *CANmodule)
+{
     //TODO: Implement this function
-    ESP_LOGE("CO_CANclearPendingSyncPDOs","This function is NOT implemented!");
+    ESP_LOGE("CO_CANclearPendingSyncPDOs", "This function is NOT implemented!");
     uint32_t tpdoDeleted = 0U;
 
     // CO_LOCK_CAN_SEND();
@@ -425,17 +451,18 @@ void CO_CANclearPendingSyncPDOs(CO_CANmodule_t *CANmodule){
     // }
     // CO_UNLOCK_CAN_SEND();
 
-
-    if(tpdoDeleted != 0U){
-        CO_errorReport((CO_EM_t*)CANmodule->em, CO_EM_TPDO_OUTSIDE_WINDOW, CO_EMC_COMMUNICATION, tpdoDeleted);
+    if (tpdoDeleted != 0U)
+    {
+        CO_errorReport((CO_EM_t *)CANmodule->em, CO_EM_TPDO_OUTSIDE_WINDOW, CO_EMC_COMMUNICATION, tpdoDeleted);
     }
 }
 //TODO: usefull error handling
 /******************************************************************************/
-void CO_CANverifyErrors(CO_CANmodule_t *CANmodule){
+void CO_CANverifyErrors(CO_CANmodule_t *CANmodule)
+{
 
     uint16_t rxErrors, txErrors, overflow;
-    CO_EM_t* em = (CO_EM_t*)CANmodule->em;
+    CO_EM_t *em = (CO_EM_t *)CANmodule->em;
     uint32_t err;
 
     /* get error counters from module. Id possible, function may use different way to
@@ -449,73 +476,87 @@ void CO_CANverifyErrors(CO_CANmodule_t *CANmodule){
 
     err = ((uint32_t)txErrors << 16) | ((uint32_t)rxErrors << 8) | overflow;
 
-    if(CANmodule->errOld != err){
+    if (CANmodule->errOld != err)
+    {
         CANmodule->errOld = err;
 
-        if(txErrors >= 256U){                               /* bus off */
-            ESP_LOGE("CO_CANverifyErrors","can bus off");
+        if (txErrors >= 256U)
+        { /* bus off */
+            ESP_LOGE("CO_CANverifyErrors", "can bus off");
             CO_errorReport(em, CO_EM_CAN_TX_BUS_OFF, CO_EMC_BUS_OFF_RECOVERED, err);
         }
-        else{                                               /* not bus off */
-            ESP_LOGI("CO_CANverifyErrors","reset bus off");
+        else
+        { /* not bus off */
+            ESP_LOGI("CO_CANverifyErrors", "reset bus off");
             CO_errorReset(em, CO_EM_CAN_TX_BUS_OFF, err);
 
-            if((rxErrors >= 96U) || (txErrors >= 96U)){     /* bus warning */
-                ESP_LOGE("CO_CANverifyErrors","bus warning");
+            if ((rxErrors >= 96U) || (txErrors >= 96U))
+            { /* bus warning */
+                ESP_LOGE("CO_CANverifyErrors", "bus warning");
                 CO_errorReport(em, CO_EM_CAN_BUS_WARNING, CO_EMC_NO_ERROR, err);
             }
 
-            if(rxErrors >= 128U){                           /* RX bus passive */
-                ESP_LOGE("CO_CANverifyErrors","RX bus passive");
+            if (rxErrors >= 128U)
+            { /* RX bus passive */
+                ESP_LOGE("CO_CANverifyErrors", "RX bus passive");
                 CO_errorReport(em, CO_EM_CAN_RX_BUS_PASSIVE, CO_EMC_CAN_PASSIVE, err);
             }
-            else{
-                ESP_LOGE("CO_CANverifyErrors","reset RX bus passive");
+            else
+            {
+                ESP_LOGE("CO_CANverifyErrors", "reset RX bus passive");
                 CO_errorReset(em, CO_EM_CAN_RX_BUS_PASSIVE, err);
             }
 
-            if(txErrors >= 128U){                           /* TX bus passive */
-                if(!CANmodule->firstCANtxMessage){
-                    ESP_LOGE("CO_CANverifyErrors","TX bus passive");
+            if (txErrors >= 128U)
+            { /* TX bus passive */
+                if (!CANmodule->firstCANtxMessage)
+                {
+                    ESP_LOGE("CO_CANverifyErrors", "TX bus passive");
                     CO_errorReport(em, CO_EM_CAN_TX_BUS_PASSIVE, CO_EMC_CAN_PASSIVE, err);
                 }
             }
-            else{
+            else
+            {
                 bool_t isError = CO_isError(em, CO_EM_CAN_TX_BUS_PASSIVE);
-                if(isError){
-                    ESP_LOGE("CO_CANverifyErrors","reset TX bus passive");
+                if (isError)
+                {
+                    ESP_LOGE("CO_CANverifyErrors", "reset TX bus passive");
                     CO_errorReset(em, CO_EM_CAN_TX_BUS_PASSIVE, err);
                     CO_errorReset(em, CO_EM_CAN_TX_OVERFLOW, err);
                 }
             }
 
-            if((rxErrors < 96U) && (txErrors < 96U)){       /* no error */
-                ESP_LOGE("CO_CANverifyErrors","no error");
+            if ((rxErrors < 96U) && (txErrors < 96U))
+            { /* no error */
+                ESP_LOGE("CO_CANverifyErrors", "no error");
                 CO_errorReset(em, CO_EM_CAN_BUS_WARNING, err);
             }
         }
 
-        if(overflow != 0U){                                 /* CAN RX bus overflow */
-            ESP_LOGE("CO_CANverifyErrors","CAN RX bus overflow oO");
+        if (overflow != 0U)
+        { /* CAN RX bus overflow */
+            ESP_LOGE("CO_CANverifyErrors", "CAN RX bus overflow oO");
             CO_errorReport(em, CO_EM_CAN_RXB_OVERFLOW, CO_EMC_CAN_OVERRUN, err);
         }
     }
 }
 
 /******************************************************************************/
-void CO_CANinterrupt(void *args){
-    CO_CANmodule_t* CANmodule = CANmodulePointer;
-    can_status_info_t esp_can_hw_status;    /* Define variable for hardware status of esp can interface */
-    ESP_ERROR_CHECK(can_get_status_info(&esp_can_hw_status));   /* Get hardware status of esp can interface */
+void CO_CANinterrupt(void *args)
+{
+    CO_CANmodule_t *CANmodule = CANmodulePointer;
+    can_status_info_t esp_can_hw_status;                      /* Define variable for hardware status of esp can interface */
+    ESP_ERROR_CHECK(can_get_status_info(&esp_can_hw_status)); /* Get hardware status of esp can interface */
     /* receive interrupt */
-    if(esp_can_hw_status.msgs_to_rx != 0){
+    if (esp_can_hw_status.msgs_to_rx != 0)
+    {
         can_message_t temp_can_message; //ESP data type can message
         ESP_ERROR_CHECK(can_receive(&temp_can_message, pdMS_TO_TICKS(CAN_TICKS_TO_WAIT)));
-        
-        CO_CANrxMsg_t rcvMsg;       /* pointer to received message in CAN module */
-        uint16_t index;             /* index of received message */
-        uint32_t rcvMsgIdent;       /* identifier of the received message */
-        CO_CANrx_t *buffer = NULL;  /* receive message buffer from CO_CANmodule_t object. */
+
+        CO_CANrxMsg_t rcvMsg;      /* pointer to received message in CAN module */
+        uint16_t index;            /* index of received message */
+        uint32_t rcvMsgIdent;      /* identifier of the received message */
+        CO_CANrx_t *buffer = NULL; /* receive message buffer from CO_CANmodule_t object. */
         bool_t msgMatched = false;
 
         rcvMsg.ident = temp_can_message.identifier;
@@ -527,29 +568,35 @@ void CO_CANinterrupt(void *args){
         rcvMsg.DLC = temp_can_message.data_length_code; /* Set data length in library message */
         for (uint8_t i = 0; i < temp_can_message.data_length_code; i++)
         {
-            rcvMsg.data[i] = temp_can_message.data[i];  /* copy data from esp can message to library message */
+            rcvMsg.data[i] = temp_can_message.data[i]; /* copy data from esp can message to library message */
         }
 
         rcvMsgIdent = rcvMsg.ident;
-        if(CANmodule->useCANrxFilters){
-            ESP_LOGE("CO_CANinterrupt","Filter system is not implemented");
+        if (CANmodule->useCANrxFilters)
+        {
+            ESP_LOGE("CO_CANinterrupt", "Filter system is not implemented");
             /* CAN module filters are used. Message with known 11-bit identifier has */
             /* been received */
-            index = 0;  /* get index of the received message here. Or something similar */
-            if(index < CANmodule->rxSize){
+            index = 0; /* get index of the received message here. Or something similar */
+            if (index < CANmodule->rxSize)
+            {
                 buffer = &CANmodule->rxArray[index];
                 /* verify also RTR */
-                if(((rcvMsgIdent ^ buffer->ident) & buffer->mask) == 0U){
+                if (((rcvMsgIdent ^ buffer->ident) & buffer->mask) == 0U)
+                {
                     msgMatched = true;
                 }
             }
         }
-        else{
+        else
+        {
             /* CAN module filters are not used, message with any standard 11-bit identifier */
             /* has been received. Search rxArray form CANmodule for the same CAN-ID. */
             buffer = &CANmodule->rxArray[0];
-            for(index = CANmodule->rxSize; index > 0U; index--){
-                if(((rcvMsgIdent ^ buffer->ident) & buffer->mask) == 0U){
+            for (index = CANmodule->rxSize; index > 0U; index--)
+            {
+                if (((rcvMsgIdent ^ buffer->ident) & buffer->mask) == 0U)
+                {
                     msgMatched = true;
                     break;
                 }
@@ -557,9 +604,9 @@ void CO_CANinterrupt(void *args){
             }
         }
         /* Call specific function, which will process the message */
-        if(msgMatched && (buffer != NULL) && (buffer->pFunct != NULL)){
+        if (msgMatched && (buffer != NULL) && (buffer->pFunct != NULL))
+        {
             buffer->pFunct(buffer->object, &rcvMsg);
         }
     }
 }
-
