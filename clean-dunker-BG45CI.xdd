@@ -13,7 +13,7 @@
         <ProfileTechnology>CANopen</ProfileTechnology>
       </ISO15745Reference>
     </ProfileHeader>
-    <ProfileBody xsi:type="ProfileBody_Device_CANopen" formatName="CANopen" formatVersion="1.0" fileName="clean-dunker-BG45CI.eds" fileCreator="Alexander Miller" fileCreationDate="2020-03-30" fileCreationTime="12:05:00.0000000+02:00" fileModificationDate="2020-04-03" fileModificationTime="12:05:00.0000000+02:00" fileModifiedBy="Alexander Miller" fileVersion="1" supportedLanguages="en">
+    <ProfileBody xsi:type="ProfileBody_Device_CANopen" formatName="CANopen" formatVersion="1.0" fileName="test.eds" fileCreator="Alexander Miller" fileCreationDate="2020-03-30" fileCreationTime="12:05:00.0000000+02:00" fileModificationDate="2020-04-03" fileModificationTime="12:05:00.0000000+02:00" fileModifiedBy="Alexander Miller" fileVersion="1" supportedLanguages="en">
       <DeviceIdentity>
         <vendorName readOnly="true">IDiAL IMSL - FH Dortmund</vendorName>
         <vendorID>1</vendorID>
@@ -769,6 +769,30 @@ mapped object  (subindex 1...8)
             </denotation>
             <defaultValue value="00000000000000000000" />
           </parameter>
+          <parameter uniqueID="UID_PARAM_4003" access="readWrite">
+            <label lang="en">Device Mode</label>
+            <description lang="en" />
+            <denotation>
+              <label lang="en" />
+            </denotation>
+            <defaultValue value="" />
+          </parameter>
+          <parameter uniqueID="UID_PARAM_400300" access="read">
+            <label lang="en">max sub-index</label>
+            <description lang="en" />
+            <denotation>
+              <label lang="en" />
+            </denotation>
+            <defaultValue value="1" />
+          </parameter>
+          <parameter uniqueID="UID_PARAM_400301" access="readWrite">
+            <label lang="en">Device Mode</label>
+            <description lang="en" />
+            <denotation>
+              <label lang="en" />
+            </denotation>
+            <defaultValue value="0" />
+          </parameter>
         </parameterList>
       </ApplicationProcess>
     </ProfileBody>
@@ -786,7 +810,7 @@ mapped object  (subindex 1...8)
         <ProfileTechnology>CANopen</ProfileTechnology>
       </ISO15745Reference>
     </ProfileHeader>
-    <ProfileBody xsi:type="ProfileBody_CommunicationNetwork_CANopen" formatName="CANopen" formatVersion="1.0" fileName="clean-dunker-BG45CI.eds" fileCreator="Alexander Miller" fileCreationDate="2020-03-30" fileCreationTime="12:05:00.0000000+02:00" fileModificationDate="2020-04-03" fileVersion="1" supportedLanguages="en">
+    <ProfileBody xsi:type="ProfileBody_CommunicationNetwork_CANopen" formatName="CANopen" formatVersion="1.0" fileName="test.eds" fileCreator="Alexander Miller" fileCreationDate="2020-03-30" fileCreationTime="12:05:00.0000000+02:00" fileModificationDate="2020-04-03" fileVersion="1" supportedLanguages="en">
       <ApplicationLayers>
         <CANopenObjectList>
           <CANopenObject index="1000" name="Device type" objectType="7" dataType="0007" lowLimit="" highLimit="" accessType="ro" actualValue="" denotation="" edseditor_extenstion_storagelocation="RAM" PDOmapping="no" uniqueIDRef="UID_PARAM_1000" />
@@ -884,6 +908,10 @@ mapped object  (subindex 1...8)
           </CANopenObject>
           <CANopenObject index="1F80" name="NMTStartup" objectType="7" dataType="0007" lowLimit="" highLimit="" accessType="rw" actualValue="" denotation="" edseditor_extenstion_storagelocation="RAM" PDOmapping="no" uniqueIDRef="UID_PARAM_1f80" />
           <CANopenObject index="2100" name="Error status bits" objectType="7" dataType="000A" lowLimit="" highLimit="" accessType="ro" actualValue="" denotation="" edseditor_extenstion_storagelocation="RAM" PDOmapping="optional" uniqueIDRef="UID_PARAM_2100" />
+          <CANopenObject index="4003" name="Device Mode" objectType="9" dataType="0005" lowLimit="" highLimit="" accessType="rw" actualValue="" denotation="" edseditor_extenstion_storagelocation="RAM" PDOmapping="no" uniqueIDRef="UID_PARAM_4003" subNumber="2">
+            <CANopenSubObject subIndex="0000" name="max sub-index" objectType="7" dataType="0005" lowLimit="" highLimit="" accessType="ro" actualValue="" denotation="" PDOmapping="no" uniqueIDRef="UID_PARAM_400300" />
+            <CANopenSubObject subIndex="0001" name="Device Mode" objectType="7" dataType="0005" lowLimit="" highLimit="" accessType="rw" actualValue="" denotation="" PDOmapping="no" uniqueIDRef="UID_PARAM_400301" />
+          </CANopenObject>
         </CANopenObjectList>
         <dummyUsage>
           <dummy entry="Dummy0001=0" />
