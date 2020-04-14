@@ -16,26 +16,15 @@
 #include "CO_OD.h"
 #include "CO_config.h"
 #include "modul_config.h"
+#include "dunker.h"
 //#include "imslROS.h"
 
 #include "ros.h"
 
-#define GPIO_INPUT_IO_0 (gpio_num_t)(36)
-#define GPIO_INPUT_IO_1 (gpio_num_t)(39)
-#define GPIO_INPUT_PIN_SEL ((1ULL << GPIO_INPUT_IO_0) | (1ULL << GPIO_INPUT_IO_1))
-
-volatile uint16_t coInterruptCounter = 0U; /* variable increments each millisecond */
-volatile uint16_t coInterruptCounterDiff = 0U;
-
-uint32_t voltage = 0;
+volatile uint32_t coInterruptCounter = 0U; /* variable increments each millisecond */
 
 //Timer Interrupt Configuration
 static void coMainTask(void *arg);
-
-int8_t coProcessDownloadSDO();
-int8_t coProcessUploadSDO();
-void mapRPDO(uint8_t pdoNumber, uint8_t nodeId, uint32_t *mappedObjects, uint8_t numMappedObjects);
-void mapTPDO(uint8_t pdoNumber, uint8_t nodeId, uint32_t *mappedObjects, uint8_t numMappedObjects, uint16_t eventTime, uint16_t inhibitTime);
 
 esp_timer_create_args_t coMainTaskArgs;
 //Timer Handle
@@ -46,15 +35,15 @@ void mainTask(void *pvParameter)
   coMainTaskArgs.callback = &coMainTask;
   coMainTaskArgs.name = "coMainTask";
   CO_NMT_reset_cmd_t reset = CO_RESET_NOT;
-
+  vTaskDelay(BOOT_WAIT / portTICK_PERIOD_MS);
   while (reset != CO_RESET_APP)
   {
     /* CANopen communication reset - initialize CANopen objects *******************/
     CO_ReturnError_t err;
-    uint16_t coInterruptCounterPrevious;
+    uint32_t coInterruptCounterPrevious;
 
     /* initialize CANopen */
-    err = CO_init(NULL, 42 /* NodeID */, 1000 /* bit rate */);
+    err = CO_init(NULL, NODE_ID_SELF /* NodeID */, CAN_BITRATE /* bit rate */);
     if (err != CO_ERROR_NO)
     {
       ESP_LOGE("mainTask", "CO_init failed. Errorcode: %d", err);
@@ -74,7 +63,7 @@ void mainTask(void *pvParameter)
     coInterruptCounterPrevious = coInterruptCounter;
 
     /*Set Operating Mode of Slave to Operational*/
-    CO_sendNMTcommand(CO, 0x01, 26);
+    CO_sendNMTcommand(CO, 0x01, NODE_ID_MOTOR);
 
     /* application init code goes here. */
     //rosserialSetup();
@@ -86,8 +75,8 @@ void mainTask(void *pvParameter)
     while (reset == CO_RESET_NOT)
     {
       /* loop for normal program execution ******************************************/
-      uint16_t coInterruptCounterCopy;
-
+      uint32_t coInterruptCounterCopy;
+      uint32_t coInterruptCounterDiff;
       coInterruptCounterCopy = coInterruptCounter;
       coInterruptCounterDiff = coInterruptCounterCopy - coInterruptCounterPrevious;
       coInterruptCounterPrevious = coInterruptCounterCopy;
@@ -98,23 +87,13 @@ void mainTask(void *pvParameter)
       /* Nonblocking application code may go here. */
       if (init == 0)
       {
-        /*Configure PDO Mapping on Device 0x1A*/
-        uint32_t mappedRxObjects[] = {0x43000120, 0x40030108, 0x40040108};
-        mapRPDO(0, 0x1A, mappedRxObjects, 3);
-        uint32_t mappedTxObjects[] = {0x43000120, 0x40030108, 0x40040108};
-        mapTPDO(0, 0x1A, mappedTxObjects, 3, 0x100, 0x100);
-
-        /*Set Device Mode to 3*/
-        OD_deviceMode.deviceMode = 3;
-        /*Enable Motor Power*/
-        OD_powerEnable.powerEnable = 1;
-        CO->TPDO[0]->sendRequest = 1;
+        initMotor(CO);
+        setMotorEnable(1);
         init = 1;
       }
       if (coInterruptCounter > 20000 && OD_powerEnable.powerEnable == 1)
       {
-        OD_powerEnable.powerEnable = 0;
-        CO->TPDO[0]->sendRequest = 1;
+        setMotorEnable(0);
       }
       if (toggle)
       {
@@ -129,8 +108,7 @@ void mainTask(void *pvParameter)
         toggle = !toggle;
       }
 
-      OD_velocityDesiredValue.velocityDesiredValue = speed;
-      CO->TPDO[0]->sendRequest = 1;
+      setMotorSpeed(speed);
 
       // ESP_LOGI("MAIN", "%d", voltage);
       //rosserialPublish();
@@ -171,112 +149,10 @@ static void coMainTask(void *arg)
   }
 }
 
-int8_t coProcessUploadSDO()
-{
-  uint32_t SdoAbortCode = CO_SDO_AB_NONE;
-  int8_t ret = 0;
-  uint32_t dataSize = 0;
-  do
-  {
-    ret = CO_SDOclientUpload(CO->SDOclient[0], coInterruptCounterDiff, 2000, &dataSize, &SdoAbortCode);
-  } while (ret > 0);
-  return ret;
-}
-
-int8_t coProcessDownloadSDO()
-{
-  uint32_t SdoAbortCode = CO_SDO_AB_NONE;
-  int8_t ret = 0;
-  do
-  {
-    ret = CO_SDOclientDownload(CO->SDOclient[0], coInterruptCounterDiff, 2000, &SdoAbortCode);
-  } while (ret > 0);
-  return ret;
-}
-
 extern "C"
 {
   void app_main()
   {
     xTaskCreate(&mainTask, "mainTask", 4096, NULL, 5, NULL);
   }
-}
-
-void mapRPDO(uint8_t pdoNumber, uint8_t nodeId, uint32_t *mappedObjects, uint8_t numMappedObjects)
-{
-  uint32_t v32 = 0; //Temporary Storage
-  uint8_t v8 = 0;   //Temporary Storage
-
-  //RPDO Disable
-  v32 = ((0x200 + nodeId + pdoNumber) | 0x80000000);
-  CO_SDOclientDownloadInitiate(CO->SDOclient[0], 0x1400 + pdoNumber, 1, (uint8_t *)&v32, sizeof(v32), 0);
-  coProcessDownloadSDO();
-
-  //RPDO Disable Mapping
-  v8 = 0;
-  CO_SDOclientDownloadInitiate(CO->SDOclient[0], 0x1600 + pdoNumber, 0, (uint8_t *)&v8, sizeof(v8), 0);
-  coProcessDownloadSDO();
-
-  //RPDO Mapping
-  for (uint8_t i = 0; i < numMappedObjects; i++)
-  {
-    v32 = mappedObjects[i];
-    CO_SDOclientDownloadInitiate(CO->SDOclient[0], 0x1600 + pdoNumber, 1 + i, (uint8_t *)&v32, sizeof(v32), 0);
-    coProcessDownloadSDO();
-  }
-
-  //RPDO Enable Mapping
-  v8 = numMappedObjects;
-  CO_SDOclientDownloadInitiate(CO->SDOclient[0], 0x1600 + pdoNumber, 0, (uint8_t *)&v8, sizeof(v8), 0);
-  coProcessDownloadSDO();
-
-  //RPDO Enable
-  v32 = (0x200 + nodeId + pdoNumber);
-  CO_SDOclientDownloadInitiate(CO->SDOclient[0], 0x1400 + pdoNumber, 1, (uint8_t *)&v32, sizeof(v32), 0);
-  coProcessDownloadSDO();
-}
-
-void mapTPDO(uint8_t pdoNumber, uint8_t nodeId, uint32_t *mappedObjects, uint8_t numMappedObjects, uint16_t eventTime, uint16_t inhibitTime)
-{
-  uint32_t v32 = 0;
-  uint16_t v16 = 0;
-  uint8_t v8 = 0;
-
-  //TPDO Disable
-  v32 = ((0x180 + nodeId + pdoNumber) | 0x80000000);
-  CO_SDOclientDownloadInitiate(CO->SDOclient[0], 0x1800 + pdoNumber, 1, (uint8_t *)&v32, sizeof(v32), 0);
-  coProcessDownloadSDO();
-
-  //TPDO Disable Mapping
-  v8 = 0;
-  CO_SDOclientDownloadInitiate(CO->SDOclient[0], 0x1a00 + pdoNumber, 0, (uint8_t *)&v8, sizeof(v8), 0);
-  coProcessDownloadSDO();
-
-  //TPDO Set Eventtime
-  v16 = eventTime;
-  CO_SDOclientDownloadInitiate(CO->SDOclient[0], 0x1800 + pdoNumber, 5, (uint8_t *)&v16, sizeof(v16), 0);
-  coProcessDownloadSDO();
-
-  //TPDO Set Inhibittime
-  v16 = inhibitTime;
-  CO_SDOclientDownloadInitiate(CO->SDOclient[0], 0x1800 + pdoNumber, 3, (uint8_t *)&v16, sizeof(v16), 0);
-  coProcessDownloadSDO();
-
-  //TPDO Mapping
-  for (uint8_t i = 0; i < numMappedObjects; i++)
-  {
-    v32 = mappedObjects[i];
-    CO_SDOclientDownloadInitiate(CO->SDOclient[0], 0x1a00 + pdoNumber, 1 + i, (uint8_t *)&v32, sizeof(v32), 0);
-    coProcessDownloadSDO();
-  }
-
-  //TPDO Enable Mapping
-  v8 = numMappedObjects;
-  CO_SDOclientDownloadInitiate(CO->SDOclient[0], 0x1a00 + pdoNumber, 0, (uint8_t *)&v8, sizeof(v8), 0);
-  coProcessDownloadSDO();
-
-  //TPDO Enable
-  v32 = (0x180 + nodeId + pdoNumber);
-  CO_SDOclientDownloadInitiate(CO->SDOclient[0], 0x1800 + pdoNumber, 1, (uint8_t *)&v32, sizeof(v32), 0);
-  coProcessDownloadSDO();
 }

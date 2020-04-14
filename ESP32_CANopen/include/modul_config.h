@@ -13,8 +13,15 @@
 #define HATOX_CONFIG_H
 
 //####  MAIN CONFIG  ####
+#define BOOT_WAIT 2000
 #define MAIN_WAIT 100 /** Time in ms between every main loop cycle */
 
+//----------------------------------
+
+//#### CANOPEN CONFIG ####
+#define CAN_BITRATE 1000   /** 1Mbit*/
+#define NODE_ID_SELF 0x42  /** ESP32 Modul ID*/
+#define NODE_ID_MOTOR 0x1A /** Dunker Motor ID*/
 //----------------------------------
 
 //####  ROSSERIAL CONFIG  ####
@@ -27,7 +34,7 @@
 
 //#define ROS_SERVER_IP "192.168.10.1" /** Rosserial server ip */
 #define ROS_SERVER_IP "192.168.0.27" /** Rosserial server ip (DEV!) */
-#define ROS_SERVER_PORT 11411 /** Rosserial server port */
+#define ROS_SERVER_PORT 11411        /** Rosserial server port */
 
 #define UART_PORT UART_NUM_0   /** Serial interface for Rosserial */
 #define UART_TX_PIN GPIO_NUM_1 /** Serial TX Pinnummber */
