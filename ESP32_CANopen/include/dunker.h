@@ -22,7 +22,7 @@ extern "C"
 
     void initMotor(CO_t *CO);
     void setMotorEnable(uint8_t value);
-    void setMotorSpeed(int32_t speed);
+    void setMotorSpeed(int16_t speed);
     int8_t coProcessDownloadSDO();
     int8_t coProcessUploadSDO();
     void mapRPDO(uint8_t pdoNumber, uint8_t nodeId, uint32_t *mappedObjects, uint8_t numMappedObjects);

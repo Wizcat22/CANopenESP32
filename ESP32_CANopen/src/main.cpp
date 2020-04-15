@@ -68,7 +68,7 @@ void mainTask(void *pvParameter)
     /* application init code goes here. */
     //rosserialSetup();
 
-    int32_t speed = 0;
+    int16_t speed = 0;
     uint8_t init = 0;
     uint8_t toggle = 0;
 
@@ -91,7 +91,7 @@ void mainTask(void *pvParameter)
         setMotorEnable(1);
         init = 1;
       }
-      if (coInterruptCounter > 20000 && OD_powerEnable.powerEnable == 1)
+      if (coInterruptCounter > 20000)
       {
         setMotorEnable(0);
       }

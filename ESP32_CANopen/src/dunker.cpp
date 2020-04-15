@@ -2,6 +2,7 @@
 #include "modul_config.h"
 #include "CANopen.h"
 #include "CO_OD.h"
+#include "esp_log.h"
 
 CO_t *_CO;
 
@@ -9,31 +10,40 @@ void initMotor(CO_t *CO)
 {
     _CO = CO;
     /*Configure PDO Mapping on Device 0x1A*/
-    uint32_t mappedRxObjects[] = {0x43000120, 0x40030108, 0x40040108};
+    uint32_t mappedRxObjects[] = {0x60420010, 0x60400010, 0x60600008};
     mapRPDO(0, NODE_ID_MOTOR, mappedRxObjects, 3);
-    uint32_t mappedTxObjects[] = {0x43000120, 0x40030108, 0x40040108};
-    mapTPDO(0, NODE_ID_MOTOR, mappedTxObjects, 3, 0x100, 0x100);
+    uint32_t mappedTxObjects[] = {0x60410010};
+    mapTPDO(0, NODE_ID_MOTOR, mappedTxObjects, 1, 0x100, 0x100);
 }
 
 void setMotorEnable(uint8_t value)
 {
     if (value)
     {
-        OD_deviceMode.deviceMode = 3;   /*Set Device Mode to 3*/
-        OD_powerEnable.powerEnable = 1; /*Enable Motor Power*/
-        CO->TPDO[0]->sendRequest = 1;
+        OD_motor_0_modes_of_operation = 0x2;
+        OD_motor_0_control_word = 0xE;
+        CO->TPDO[2]->sendRequest = 1;
+        while (!(OD_motor_0_status_word & (1 << 0)))
+        {
+            ESP_LOGI("Dunker", "WAITING: %d", OD_motor_0_status_word);
+            OD_motor_0_modes_of_operation = 0x2;
+            OD_motor_0_control_word = 0xE;
+            CO->TPDO[2]->sendRequest = 1;
+        }
+        OD_motor_0_control_word = 0xF;
+        CO->TPDO[2]->sendRequest = 1;
     }
     else
     {
-        OD_powerEnable.powerEnable = 0; /*Enable Motor Power*/
-        CO->TPDO[0]->sendRequest = 1;
+        OD_motor_0_control_word = 0;
+        CO->TPDO[2]->sendRequest = 1;
     }
 }
 
-void setMotorSpeed(int32_t speed)
+void setMotorSpeed(int16_t speed)
 {
-    OD_velocityDesiredValue.velocityDesiredValue = speed; /*Set Motor Speed*/
-    CO->TPDO[0]->sendRequest = 1;
+    OD_motor_0_vl_target_velocity_register = speed; /*Set Motor Speed*/
+    CO->TPDO[2]->sendRequest = 1;
 }
 
 int8_t coProcessUploadSDO()
