@@ -21,6 +21,7 @@
 
 #include "ros.h"
 
+Dunker motor;
 volatile uint32_t coInterruptCounter = 0U; /* variable increments each millisecond */
 
 //Timer Interrupt Configuration
@@ -87,13 +88,13 @@ void mainTask(void *pvParameter)
       /* Nonblocking application code may go here. */
       if (init == 0)
       {
-        initMotor(CO);
-        setMotorEnable(1);
+        motor.init(CO);
+        motor.setEnable(1);
         init = 1;
       }
       if (coInterruptCounter > 20000)
       {
-        setMotorEnable(0);
+        motor.setEnable(0);
       }
       if (toggle)
       {
@@ -108,7 +109,7 @@ void mainTask(void *pvParameter)
         toggle = !toggle;
       }
 
-      setMotorSpeed(speed);
+      motor.setSpeed(speed);
 
       // ESP_LOGI("MAIN", "%d", voltage);
       //rosserialPublish();
