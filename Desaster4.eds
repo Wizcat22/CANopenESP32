@@ -8,7 +8,7 @@ Description=IMSL ESP Node - Desaster 4
 CreationTime=12:05PM
 CreationDate=03-30-2020
 CreatedBy=Alexander Miller, Mathias Parys
-ModificationTime=12:42PM
+ModificationTime=12:05PM
 ModificationDate=04-15-2020
 ModifiedBy=Alexander Miller, Mathias Parys
 
@@ -125,7 +125,7 @@ DefaultValue=0x00000001
 PDOMapping=0
 
 [OptionalObjects]
-SupportedObjects=52
+SupportedObjects=53
 1=0x1003
 2=0x1005
 3=0x1006
@@ -178,6 +178,7 @@ SupportedObjects=52
 50=0x6304
 51=0x6305
 52=0x6306
+53=0x6307
 
 [1003]
 ParameterName=Pre-defined error field
@@ -1924,6 +1925,15 @@ ParameterName=motor_1_position_actual_value_register
 ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0004
+AccessType=rw
+DefaultValue=
+PDOMapping=1
+
+[6307]
+ParameterName=motor_1_modes_of_operation
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0002
 AccessType=rw
 DefaultValue=
 PDOMapping=1

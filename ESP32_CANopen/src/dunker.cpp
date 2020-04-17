@@ -1,3 +1,14 @@
+/**
+ * @file dunker.cpp
+ * @author Alexander Miller (alexander.miller@fh-dortmund.de)
+ * @brief Dunker Motoren CANOpen
+ * @version 0.1
+ * @date 2020-04-17
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 #include "dunker.h"
 #include "modul_config.h"
 #include "freertos/FreeRTOS.h"
@@ -6,7 +17,31 @@
 #include "CO_OD.h"
 #include "esp_log.h"
 
-CO_t *_CO;
+/**
+     * @brief Array for all Motors and the corresponding object-dictionary entries
+     * 
+     */
+Dunker::motorRegister Dunker::motor[] =
+    {{&OD_motor_0_control_word, &OD_motor_0_status_word, &OD_motor_0_modes_of_operation, &OD_motor_0_vl_target_velocity_register},
+     {&OD_motor_1_control_word, &OD_motor_1_status_word, &OD_motor_1_modes_of_operation, &OD_motor_1_vl_target_velocity_register}};
+
+/**
+ * @brief Number of created objects
+ * 
+ */
+static uint8_t numMotors = 0;
+
+/**
+ * @brief Motornumber of this object
+ * 
+ */
+uint8_t motorNumber = 0;
+
+Dunker::Dunker()
+{
+    motorNumber = numMotors;
+    numMotors++;
+}
 
 int8_t Dunker::init(CO_t *CO)
 {
@@ -16,7 +51,7 @@ int8_t Dunker::init(CO_t *CO)
     uint32_t mappedRxObjects[] = {0x60420010, 0x60400010, 0x60600008};
     ret = mapRPDO(0, NODE_ID_MOTOR, mappedRxObjects, 3);
     uint32_t mappedTxObjects[] = {0x60410010};
-    ret = mapTPDO(0, NODE_ID_MOTOR, mappedTxObjects, 1, 0x100, 0x100);
+    ret += mapTPDO(0, NODE_ID_MOTOR, mappedTxObjects, 1, 0x100, 0x100);
     return ret;
 }
 
@@ -26,23 +61,23 @@ int8_t Dunker::setEnable(uint8_t value)
     int8_t ret = 0;
 
     /*Check for fault condition*/
-    if ((OD_motor_0_status_word & BM_STATUS_FAULT_REACTION_ACTIVE) != STATUS_FAULT_REACTION_ACTIVE && (OD_motor_0_status_word & BM_STATUS_FAULT) != STATUS_FAULT)
+    if ((*motor[motorNumber].status & BM_STATUS_FAULT_REACTION_ACTIVE) != STATUS_FAULT_REACTION_ACTIVE && (*motor[motorNumber].status & BM_STATUS_FAULT) != STATUS_FAULT)
     {
         if (value)
         {
-            while (((OD_motor_0_status_word & BM_STATUS_NOT_READY_TO_SWITCH_ON) != STATUS_NOT_READY_TO_SWITCH_ON) && (OD_motor_0_status_word & BM_STATUS_READY_TO_SWITCH_ON) != STATUS_READY_TO_SWITCH_ON)
+            while (((*motor[motorNumber].status & BM_STATUS_NOT_READY_TO_SWITCH_ON) != STATUS_NOT_READY_TO_SWITCH_ON) && (*motor[motorNumber].status & BM_STATUS_READY_TO_SWITCH_ON) != STATUS_READY_TO_SWITCH_ON)
             {
                 vTaskDelay(1 / portTICK_PERIOD_MS);
-                OD_motor_0_modes_of_operation = OPERATION_MODE;
-                OD_motor_0_control_word = CTRL_SHUTDOWN;
+                *motor[motorNumber].mode = OPERATION_MODE;
+                *motor[motorNumber].control = CTRL_SHUTDOWN;
                 CO->TPDO[2]->sendRequest = 1;
             }
-            OD_motor_0_control_word = CTRL_SWITCH_ON_ENABLE_OPERATION;
+            *motor[motorNumber].control = CTRL_SWITCH_ON_ENABLE_OPERATION;
             CO->TPDO[2]->sendRequest = 1;
         }
         else
         {
-            OD_motor_0_control_word = CTRL_DISABLE_VOLTAGE;
+            *motor[motorNumber].control = CTRL_DISABLE_VOLTAGE;
             CO->TPDO[2]->sendRequest = 1;
         }
     }
@@ -59,9 +94,9 @@ int8_t Dunker::setSpeed(int16_t speed)
     int8_t ret = 0;
 
     /*Check for fault condition*/
-    if ((OD_motor_0_status_word & BM_STATUS_FAULT_REACTION_ACTIVE) != STATUS_FAULT_REACTION_ACTIVE && (OD_motor_0_status_word & BM_STATUS_FAULT) != STATUS_FAULT)
+    if ((*motor[motorNumber].status & BM_STATUS_FAULT_REACTION_ACTIVE) != STATUS_FAULT_REACTION_ACTIVE && (*motor[motorNumber].status & BM_STATUS_FAULT) != STATUS_FAULT)
     {
-        OD_motor_0_vl_target_velocity_register = speed; /*Set Motor Speed*/
+        *motor[motorNumber].velocity = speed; /*Set Motor Speed*/
         CO->TPDO[2]->sendRequest = 1;
     }
     else

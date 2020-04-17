@@ -53,9 +53,9 @@
 
 /*******************************************************************************
    FILE INFO:
-      FileName:     
+      FileName:     Desaster4.eds
       FileVersion:  1
-      CreationTime: 12:05
+      CreationTime: 12:05PM
       CreationDate: 03-30-2020
       CreatedBy:    Alexander Miller, Mathias Parys
 ******************************************************************************/
@@ -75,7 +75,7 @@
 *******************************************************************************/
   #define CO_NO_SYNC                     1   //Associated objects: 1005-1007
   #define CO_NO_EMERGENCY                1   //Associated objects: 1014, 1015
-  #define CO_NO_TIME                       0   //Associated objects: 1012, 1013
+  #define CO_NO_TIME                     0   //Associated objects: 1012, 1013
   #define CO_NO_SDO_SERVER               1   //Associated objects: 1200-127F
   #define CO_NO_SDO_CLIENT               1   //Associated objects: 1280-12FF
   #define CO_NO_LSS_SERVER               0   //LSS Slave
@@ -88,7 +88,7 @@
 /*******************************************************************************
    OBJECT DICTIONARY
 *******************************************************************************/
-   #define CO_OD_NoOfElements             56
+   #define CO_OD_NoOfElements             57
 
 
 /*******************************************************************************
@@ -506,6 +506,9 @@
 /*6306 */
         #define OD_6306_motor_1_position_actual_value_register      0x6306
 
+/*6307 */
+        #define OD_6307_motor_1_modes_of_operation                  0x6307
+
 /*******************************************************************************
    STRUCTURES FOR VARIABLES IN DIFFERENT MEMORY LOCATIONS
 *******************************************************************************/
@@ -569,6 +572,7 @@ struct sCO_OD_RAM{
 /*6304      */ INTEGER16       motor_1_vl_target_velocity_register;
 /*6305      */ INTEGER16       motor_1_vl_velocity_actual_value_register;
 /*6306      */ INTEGER32       motor_1_position_actual_value_register;
+/*6307      */ INTEGER8        motor_1_modes_of_operation;
 
                UNSIGNED32     LastWord;
 };
@@ -770,6 +774,9 @@ extern struct sCO_OD_EEPROM CO_OD_EEPROM;
 
 /*6306, Data Type: INTEGER32 */
         #define OD_motor_1_position_actual_value_register           CO_OD_RAM.motor_1_position_actual_value_register
+
+/*6307, Data Type: INTEGER8 */
+        #define OD_motor_1_modes_of_operation                       CO_OD_RAM.motor_1_modes_of_operation
 
 #endif
 // clang-format on

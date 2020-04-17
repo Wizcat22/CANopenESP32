@@ -87,6 +87,7 @@ struct sCO_OD_RAM CO_OD_RAM = {
 /*6304*/ 0x00,
 /*6305*/ 0x00,
 /*6306*/ 0x0000L,
+/*6307*/ 0x0,
 
            CO_OD_FIRST_LAST_WORD,
 };
@@ -270,7 +271,7 @@ struct sCO_OD_EEPROM CO_OD_EEPROM = {
 /*******************************************************************************
    OBJECT DICTIONARY
 *******************************************************************************/
-const CO_OD_entry_t CO_OD[56] = {
+const CO_OD_entry_t CO_OD[57] = {
 
 {0x1000, 0x00, 0x86, 4, (void*)&CO_OD_RAM.deviceType},
 {0x1001, 0x00, 0x26, 1, (void*)&CO_OD_RAM.errorRegister},
@@ -328,5 +329,6 @@ const CO_OD_entry_t CO_OD[56] = {
 {0x6304, 0x00, 0xbe, 2, (void*)&CO_OD_RAM.motor_1_vl_target_velocity_register},
 {0x6305, 0x00, 0xa6, 2, (void*)&CO_OD_RAM.motor_1_vl_velocity_actual_value_register},
 {0x6306, 0x00, 0xbe, 4, (void*)&CO_OD_RAM.motor_1_position_actual_value_register},
+{0x6307, 0x00, 0x3e, 1, (void*)&CO_OD_RAM.motor_1_modes_of_operation},
 };
 // clang-format on
