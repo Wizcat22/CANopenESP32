@@ -17,11 +17,14 @@
 #include "CO_config.h"
 #include "modul_config.h"
 #include "dunker.h"
+#include "Gyro.h"
 //#include "imslROS.h"
 
 #include "ros.h"
 
 Dunker motor;
+Gyro hg_gyro;
+
 volatile uint32_t coInterruptCounter = 0U; /* variable increments each millisecond */
 
 //Timer Interrupt Configuration
@@ -72,6 +75,12 @@ void mainTask(void *pvParameter)
     int16_t speed = 0;
     uint8_t init = 0;
     uint8_t toggle = 0;
+    uint8_t activate_gyro = 0;
+
+    if (activate_gyro)
+    {
+      hg_gyro.init(CO);
+    }
 
     while (reset == CO_RESET_NOT)
     {
@@ -104,12 +113,17 @@ void mainTask(void *pvParameter)
       {
         speed -= 100;
       }
-      if (speed >= 3000 || speed <= -2800)
+      if (speed >= 4950 || speed <= -4950)
       {
         toggle = !toggle;
       }
 
       motor.setSpeed(speed);
+
+      if (activate_gyro)
+      {
+        ESP_LOGI("GYRO_Test", "lifeCounter: %d", hg_gyro.getLifeCounter());
+      }
 
       // ESP_LOGI("MAIN", "%d", voltage);
       //rosserialPublish();

@@ -53,9 +53,9 @@
 
 /*******************************************************************************
    FILE INFO:
-      FileName:     Desaster4.eds
+      FileName:     
       FileVersion:  1
-      CreationTime: 12:05PM
+      CreationTime: 12:05
       CreationDate: 03-30-2020
       CreatedBy:    Alexander Miller, Mathias Parys
 ******************************************************************************/
@@ -75,7 +75,7 @@
 *******************************************************************************/
   #define CO_NO_SYNC                     1   //Associated objects: 1005-1007
   #define CO_NO_EMERGENCY                1   //Associated objects: 1014, 1015
-  #define CO_NO_TIME                     0   //Associated objects: 1012, 1013
+  #define CO_NO_TIME                       0   //Associated objects: 1012, 1013
   #define CO_NO_SDO_SERVER               1   //Associated objects: 1200-127F
   #define CO_NO_SDO_CLIENT               1   //Associated objects: 1280-12FF
   #define CO_NO_LSS_SERVER               0   //LSS Slave
@@ -88,7 +88,7 @@
 /*******************************************************************************
    OBJECT DICTIONARY
 *******************************************************************************/
-   #define CO_OD_NoOfElements             57
+   #define CO_OD_NoOfElements             47
 
 
 /*******************************************************************************
@@ -462,52 +462,22 @@
         #define OD_6101_8_hatox_command_register_char_5             8
 
 /*6200 */
-        #define OD_6200_motor_0_abort_connection_option_code_register 0x6200
+        #define OD_6200_motor_0_device_command                      0x6200
 
 /*6201 */
-        #define OD_6201_motor_0_error_code_register                 0x6201
+        #define OD_6201_motor_0_error_register                      0x6201
 
 /*6202 */
-        #define OD_6202_motor_0_control_word                        0x6202
+        #define OD_6202_motor_0_status_register                     0x6202
 
 /*6203 */
-        #define OD_6203_motor_0_status_word                         0x6203
+        #define OD_6203_motor_0_mode_of_operation                   0x6203
 
 /*6204 */
-        #define OD_6204_motor_0_vl_target_velocity_register         0x6204
+        #define OD_6204_motor_0_power_enable                        0x6204
 
 /*6205 */
-        #define OD_6205_motor_0_vl_velocity_actual_value_register   0x6205
-
-/*6206 */
-        #define OD_6206_motor_0_position_actual_value_register      0x6206
-
-/*6207 */
-        #define OD_6207_motor_0_modes_of_operation                  0x6207
-
-/*6300 */
-        #define OD_6300_motor_1_abort_connection_option_code_register 0x6300
-
-/*6301 */
-        #define OD_6301_motor_1_error_code_register                 0x6301
-
-/*6302 */
-        #define OD_6302_motor_1_control_word                        0x6302
-
-/*6303 */
-        #define OD_6303_motor_1_status_word                         0x6303
-
-/*6304 */
-        #define OD_6304_motor_1_vl_target_velocity_register         0x6304
-
-/*6305 */
-        #define OD_6305_motor_1_vl_velocity_actual_value_register   0x6305
-
-/*6306 */
-        #define OD_6306_motor_1_position_actual_value_register      0x6306
-
-/*6307 */
-        #define OD_6307_motor_1_modes_of_operation                  0x6307
+        #define OD_6205_motor_0_velocity_target_value               0x6205
 
 /*******************************************************************************
    STRUCTURES FOR VARIABLES IN DIFFERENT MEMORY LOCATIONS
@@ -557,22 +527,12 @@ struct sCO_OD_RAM{
 /*6004      */ UNSIGNED8       gyro_lifecounter_register[1];
 /*6100      */ UNSIGNED8       hatox_status_register[7];
 /*6101      */ UNSIGNED8       hatox_command_register[8];
-/*6200      */ INTEGER16       motor_0_abort_connection_option_code_register;
-/*6201      */ UNSIGNED16      motor_0_error_code_register;
-/*6202      */ UNSIGNED16      motor_0_control_word;
-/*6203      */ UNSIGNED16      motor_0_status_word;
-/*6204      */ INTEGER16       motor_0_vl_target_velocity_register;
-/*6205      */ INTEGER16       motor_0_vl_velocity_actual_value_register;
-/*6206      */ INTEGER32       motor_0_position_actual_value_register;
-/*6207      */ INTEGER8        motor_0_modes_of_operation;
-/*6300      */ INTEGER16       motor_1_abort_connection_option_code_register;
-/*6301      */ UNSIGNED16      motor_1_error_code_register;
-/*6302      */ UNSIGNED16      motor_1_control_word;
-/*6303      */ UNSIGNED16      motor_1_status_word;
-/*6304      */ INTEGER16       motor_1_vl_target_velocity_register;
-/*6305      */ INTEGER16       motor_1_vl_velocity_actual_value_register;
-/*6306      */ INTEGER32       motor_1_position_actual_value_register;
-/*6307      */ INTEGER8        motor_1_modes_of_operation;
+/*6200      */ UNSIGNED8       motor_0_device_command;
+/*6201      */ INTEGER16       motor_0_error_register;
+/*6202      */ UNSIGNED32      motor_0_status_register;
+/*6203      */ UNSIGNED8       motor_0_mode_of_operation;
+/*6204      */ UNSIGNED8       motor_0_power_enable;
+/*6205      */ INTEGER32       motor_0_velocity_target_value;
 
                UNSIGNED32     LastWord;
 };
@@ -730,53 +690,23 @@ extern struct sCO_OD_EEPROM CO_OD_EEPROM;
         #define ODA_hatox_command_register_char_4                   6
         #define ODA_hatox_command_register_char_5                   7
 
-/*6200, Data Type: INTEGER16 */
-        #define OD_motor_0_abort_connection_option_code_register    CO_OD_RAM.motor_0_abort_connection_option_code_register
+/*6200, Data Type: UNSIGNED8 */
+        #define OD_motor_0_device_command                           CO_OD_RAM.motor_0_device_command
 
-/*6201, Data Type: UNSIGNED16 */
-        #define OD_motor_0_error_code_register                      CO_OD_RAM.motor_0_error_code_register
+/*6201, Data Type: INTEGER16 */
+        #define OD_motor_0_error_register                           CO_OD_RAM.motor_0_error_register
 
-/*6202, Data Type: UNSIGNED16 */
-        #define OD_motor_0_control_word                             CO_OD_RAM.motor_0_control_word
+/*6202, Data Type: UNSIGNED32 */
+        #define OD_motor_0_status_register                          CO_OD_RAM.motor_0_status_register
 
-/*6203, Data Type: UNSIGNED16 */
-        #define OD_motor_0_status_word                              CO_OD_RAM.motor_0_status_word
+/*6203, Data Type: UNSIGNED8 */
+        #define OD_motor_0_mode_of_operation                        CO_OD_RAM.motor_0_mode_of_operation
 
-/*6204, Data Type: INTEGER16 */
-        #define OD_motor_0_vl_target_velocity_register              CO_OD_RAM.motor_0_vl_target_velocity_register
+/*6204, Data Type: UNSIGNED8 */
+        #define OD_motor_0_power_enable                             CO_OD_RAM.motor_0_power_enable
 
-/*6205, Data Type: INTEGER16 */
-        #define OD_motor_0_vl_velocity_actual_value_register        CO_OD_RAM.motor_0_vl_velocity_actual_value_register
-
-/*6206, Data Type: INTEGER32 */
-        #define OD_motor_0_position_actual_value_register           CO_OD_RAM.motor_0_position_actual_value_register
-
-/*6207, Data Type: INTEGER8 */
-        #define OD_motor_0_modes_of_operation                       CO_OD_RAM.motor_0_modes_of_operation
-
-/*6300, Data Type: INTEGER16 */
-        #define OD_motor_1_abort_connection_option_code_register    CO_OD_RAM.motor_1_abort_connection_option_code_register
-
-/*6301, Data Type: UNSIGNED16 */
-        #define OD_motor_1_error_code_register                      CO_OD_RAM.motor_1_error_code_register
-
-/*6302, Data Type: UNSIGNED16 */
-        #define OD_motor_1_control_word                             CO_OD_RAM.motor_1_control_word
-
-/*6303, Data Type: UNSIGNED16 */
-        #define OD_motor_1_status_word                              CO_OD_RAM.motor_1_status_word
-
-/*6304, Data Type: INTEGER16 */
-        #define OD_motor_1_vl_target_velocity_register              CO_OD_RAM.motor_1_vl_target_velocity_register
-
-/*6305, Data Type: INTEGER16 */
-        #define OD_motor_1_vl_velocity_actual_value_register        CO_OD_RAM.motor_1_vl_velocity_actual_value_register
-
-/*6306, Data Type: INTEGER32 */
-        #define OD_motor_1_position_actual_value_register           CO_OD_RAM.motor_1_position_actual_value_register
-
-/*6307, Data Type: INTEGER8 */
-        #define OD_motor_1_modes_of_operation                       CO_OD_RAM.motor_1_modes_of_operation
+/*6205, Data Type: INTEGER32 */
+        #define OD_motor_0_velocity_target_value                    CO_OD_RAM.motor_0_velocity_target_value
 
 #endif
 // clang-format on

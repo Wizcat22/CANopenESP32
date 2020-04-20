@@ -20,36 +20,38 @@ class Dunker
 {
 private:
     /*Constants*/
-    static constexpr int16_t CTRL_SHUTDOWN = 0x0E;                   //Change to "Ready to Switch on"
-    static constexpr int16_t CTRL_SWITCH_ON = 0x07;                  //Change to "Switched on"
-    static constexpr int16_t CTRL_SWITCH_ON_ENABLE_OPERATION = 0x0F; //Change to "Operation enabled"
-    static constexpr int16_t CTRL_DISABLE_VOLTAGE = 0x00;            //Change to "Switch on disabled"
-    static constexpr int16_t CTRL_QUICK_STOP = 0x02;                 //Change to "Quick stop active" while in "Operation enabled" or "Switch on disabled"
-    static constexpr int16_t CTRL_DISABLE_OPERATION = 0x07;          //Change to "Switched on"
-    static constexpr int16_t CTRL_ENABLE_OPERATION = 0x0F;           //Change to "Operation enabled"
-    static constexpr int16_t CTRL_FAULT_RESET = 0x80;                //Acknowledge "Fault" and change to "Switch on disabled" (Rising Edge)
+    static constexpr uint32_t STAT_Enabled = (1 << 0);
+    static constexpr uint32_t STAT_Error = (1 << 1);
+    static constexpr uint32_t STAT_Warning = (1 << 2);
+    static constexpr uint32_t STAT_Moving = (1 << 3);
+    static constexpr uint32_t STAT_Reached = (1 << 4);
+    static constexpr uint32_t STAT_Limit = (1 << 5);
+    static constexpr uint32_t STAT_FollowingError = (1 << 6);
+    static constexpr uint32_t STAT_HomingDone = (1 << 7);
+    static constexpr uint32_t STAT_Toggle = (1 << 8);
+    static constexpr uint32_t STAT_CommandToggle = (1 << 9);
+    static constexpr uint32_t STAT_CommandError = (1 << 10);
+    static constexpr uint32_t STAT_StopOrHalt = (1 << 11);
+    static constexpr uint32_t STAT_LimitCurrent = (1 << 12);
+    static constexpr uint32_t STAT_LimitVel = (1 << 13);
+    static constexpr uint32_t STAT_LimitPos = (1 << 14);
+    static constexpr uint32_t STAT_LimitPWM = (1 << 15);
+    static constexpr uint32_t STAT_LimitSetpointVq = (1 << 16);
+    static constexpr uint32_t STAT_LimitSetpointVd = (1 << 17);
+    static constexpr uint32_t STAT_ComOperational = (1 << 18);
+    static constexpr uint32_t STAT_ComStarted = (1 << 19);
+    static constexpr uint32_t STAT_OverTemperature = (1 << 20);
+    static constexpr uint32_t STAT_MotorOvervoltage = (1 << 21);
+    static constexpr uint32_t STAT_MotorUndervoltage = (1 << 22);
+    static constexpr uint32_t STAT_Blockage = (1 << 23);
+    static constexpr uint32_t STAT_ParamCmdExec = (1 << 24);
+    static constexpr uint32_t STAT_BallastCircuit = (1 << 25);
+    static constexpr uint32_t STAT_Direction = (1 << 26);
+    static constexpr uint32_t STAT_Overload = (1 << 27);
 
-    static constexpr int16_t BM_STATUS_NOT_READY_TO_SWITCH_ON = 0x4F; //Bitmask status "NOT_READY_TO_SWITCH_ON"
-    static constexpr int16_t BM_STATUS_SWITCH_ON_DISABLED = 0x4F;     //Bitmask status "SWITCH_ON_DISABLED"
-    static constexpr int16_t BM_STATUS_READY_TO_SWITCH_ON = 0x6F;     //Bitmask status "READY_TO_SWITCH_ON"
-    static constexpr int16_t BM_STATUS_SWITCHED_ON = 0x6F;            //Bitmask status "SWITCHED_ON"
-    static constexpr int16_t BM_STATUS_OPERATION_ENABLED = 0x6F;      //Bitmask status "OPERATION_ENABLED"
-    static constexpr int16_t BM_STATUS_QUICK_STOP_ACTIVE = 0x6F;      //Bitmask status "QUICK_STOP_ACTIVE"
-    static constexpr int16_t BM_STATUS_FAULT_REACTION_ACTIVE = 0x4F;  //Bitmask status "FAULT_REACTION_ACTIVE"
-    static constexpr int16_t BM_STATUS_FAULT = 0x4F;                  //Bitmask status "FAULT"
+    static constexpr int16_t OPERATION_MODE = 0x03; //Operation Mode 2 "Special Profile Velocity"
 
-    static constexpr int16_t STATUS_NOT_READY_TO_SWITCH_ON = 0x00; //Statuscode "NOT_READY_TO_SWITCH_ON"
-    static constexpr int16_t STATUS_SWITCH_ON_DISABLED = 0x40;     //Statuscode "SWITCH_ON_DISABLED"
-    static constexpr int16_t STATUS_READY_TO_SWITCH_ON = 0x21;     //Statuscode "READY_TO_SWITCH_ON"
-    static constexpr int16_t STATUS_SWITCHED_ON = 0x23;            //Statuscode "SWITCHED_ON"
-    static constexpr int16_t STATUS_OPERATION_ENABLED = 0x27;      //Statuscode "OPERATION_ENABLED"
-    static constexpr int16_t STATUS_QUICK_STOP_ACTIVE = 0x07;      //Statuscode "QUICK_STOP_ACTIVE"
-    static constexpr int16_t STATUS_FAULT_REACTION_ACTIVE = 0x0F;  //Statuscode "FAULT_REACTION_ACTIVE"
-    static constexpr int16_t STATUS_FAULT = 0x08;                  //Statuscode "FAULT"
-
-    static constexpr int16_t OPERATION_MODE = 0x02; //Operation Mode 2 "Velocity Mode"
-
-    static constexpr uint8_t MAX_MOTORS = 2; //Maximum number of motors
+    static constexpr uint8_t MAX_MOTORS = 1; //Maximum number of motors
 
     /**
      * @brief Struct for all nessesary registers in the object-dictionary
@@ -57,10 +59,12 @@ private:
      */
     struct motorRegister
     {
-        uint16_t *control;
-        uint16_t *status;
-        int8_t *mode;
-        int16_t *velocity;
+        uint8_t *command;
+        int16_t *error;
+        uint32_t *status;
+        uint8_t *mode;
+        uint8_t *power;
+        int32_t *velocity;
     };
 
     static motorRegister motor[MAX_MOTORS];
@@ -98,7 +102,7 @@ public:
      * @param speed Motor velocity
      * @return int8_t 0 = No Error, -1 = Motor in "FAULT"
      */
-    int8_t setSpeed(int16_t speed);
+    int8_t setSpeed(int32_t speed);
 
     /**
      * @brief Process pending SDO-Download
