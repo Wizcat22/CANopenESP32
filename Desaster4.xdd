@@ -1152,7 +1152,7 @@ SYNC start value
             <denotation>
               <label lang="en" />
             </denotation>
-            <defaultValue value="0x000002a1" />
+            <defaultValue value="0x0000021a" />
           </parameter>
           <parameter uniqueID="UID_PARAM_180202" access="readWrite">
             <label lang="en">transmission type</label>
