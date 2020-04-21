@@ -101,10 +101,12 @@ void mainTask(void *pvParameter)
         motor.setEnable(1);
         init = 1;
       }
-      if (coInterruptCounter > 20000)
+      if (coInterruptCounter > 20000 && init == 1)
       {
-        motor.setEnable(0);
+        motor.halt();
+        init = 2;
       }
+
       if (toggle)
       {
         speed += 100;

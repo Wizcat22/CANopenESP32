@@ -49,6 +49,13 @@ private:
     static constexpr uint32_t STAT_Direction = (1 << 26);
     static constexpr uint32_t STAT_Overload = (1 << 27);
 
+    static constexpr uint8_t CMD_NOP = 0x0;
+    static constexpr uint8_t CMD_ClearError = 0x1;
+    static constexpr uint8_t CMD_QuickStop = 0x2;
+    static constexpr uint8_t CMD_Halt = 0x3;
+    static constexpr uint8_t CMD_Continue = 0x4;
+    static constexpr uint8_t CMD_Update = 0x5;
+
     static constexpr int16_t OPERATION_MODE = 0x03; //Operation Mode 2 "Special Profile Velocity"
 
     static constexpr uint8_t MAX_MOTORS = 1; //Maximum number of motors
@@ -89,10 +96,38 @@ public:
     int8_t init(CO_t *CO);
 
     /**
+     * @brief Clear potential errors and reenable drive
+     * 
+     * @return int8_t 0 = No Error, -n = Errorcode
+     */
+    int8_t clearError();
+
+    /**
+     * @brief Execute quick-stop (Quick-Stop-Deceleration). See also: "continueMovement()"
+     * 
+     * @return int8_t 0 = No Error, -n = Errorcode
+     */
+    int8_t quickStop();
+
+    /**
+     * @brief Execute halt (General deceleration). See also: "continueMovement()"
+     * 
+     * @return int8_t 0 = No Error, -n = Errorcode
+     */
+    int8_t halt();
+
+    /**
+     * @brief Continues movement after QuickStop or Halt.
+     * 
+     * @return int8_t 0 = No Error, -n = Errorcode
+     */
+    int8_t continueMovement();
+
+    /**
      * @brief Change motor status to "Operation enabled" or "Switch on disabled"
      * 
      * @param value 1 = "Operation enabled" ; 0 = "Switch on disabled"
-     * @return int8_t 0 = No Error, -1 = Motor in "FAULT"
+     * @return int8_t 0 = No Error, -n = Value of Motor Error-Register (see Motor-Documentation)
      */
     int8_t setEnable(uint8_t value);
 
@@ -100,7 +135,7 @@ public:
      * @brief Set the motor velocity
      * 
      * @param speed Motor velocity
-     * @return int8_t 0 = No Error, -1 = Motor in "FAULT"
+     * @return int8_t 0 = No Error, -n = Value of Motor Error-Register (see Motor-Documentation)
      */
     int8_t setSpeed(int32_t speed);
 

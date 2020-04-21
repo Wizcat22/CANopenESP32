@@ -54,6 +54,38 @@ int8_t Dunker::init(CO_t *CO)
     return ret;
 }
 
+int8_t Dunker::clearError()
+{
+    *motor[motorNumber].command = CMD_ClearError;
+    *motor[motorNumber].velocity = 0;
+    CO->TPDO[2]->sendRequest = 1;
+    return 0;
+}
+
+int8_t Dunker::quickStop()
+{
+    *motor[motorNumber].command = CMD_QuickStop;
+    *motor[motorNumber].velocity = 0;
+    CO->TPDO[2]->sendRequest = 1;
+    return 0;
+}
+
+int8_t Dunker::halt()
+{
+    *motor[motorNumber].command = CMD_Halt;
+    *motor[motorNumber].velocity = 0;
+    CO->TPDO[2]->sendRequest = 1;
+    return 0;
+}
+
+int8_t Dunker::continueMovement()
+{
+    *motor[motorNumber].command = CMD_Continue;
+    *motor[motorNumber].velocity = 0;
+    CO->TPDO[2]->sendRequest = 1;
+    return 0;
+}
+
 int8_t Dunker::setEnable(uint8_t value)
 {
 
@@ -85,7 +117,7 @@ int8_t Dunker::setEnable(uint8_t value)
     }
     else
     {
-        ret = -1; //Can't dis-/enable motor while in fault condition
+        ret = *motor[motorNumber].error; //Can't dis-/enable motor while in fault condition
         ESP_LOGE("Dunker.setEnable", "Can't dis-/enable motor while in fault condition!");
     }
     return ret;
@@ -103,7 +135,7 @@ int8_t Dunker::setSpeed(int32_t speed)
     }
     else
     {
-        ret = -1; //Can't set speed while in fault condition
+        ret = *motor[motorNumber].error; //Can't set speed while in fault condition
     }
     return ret;
 }
