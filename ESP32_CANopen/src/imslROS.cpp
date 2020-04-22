@@ -21,6 +21,12 @@
 
 ros::NodeHandle nh; /** Rosserial nodehandle */
 
+/*Messages*/
+
+/*Publisher*/
+
+/*Variables*/
+
 void rosserialSetup()
 {
   nh.initNode();

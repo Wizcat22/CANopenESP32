@@ -22,7 +22,8 @@
      * 
      */
 Dunker::motorRegister Dunker::motor[] =
-    {{&OD_motor_0_device_command, &OD_motor_0_error_register, &OD_motor_0_status_register, &OD_motor_0_mode_of_operation, &OD_motor_0_power_enable, &OD_motor_0_velocity_target_value}};
+    {{&OD_motor_0_device_command, &OD_motor_0_error_register, &OD_motor_0_status_register, &OD_motor_0_mode_of_operation, &OD_motor_0_power_enable, &OD_motor_0_velocity_target_value},
+     {&OD_motor_1_device_command, &OD_motor_1_error_register, &OD_motor_1_status_register, &OD_motor_1_mode_of_operation, &OD_motor_1_power_enable, &OD_motor_1_velocity_target_value}};
 
 /**
  * @brief Number of created objects
@@ -42,15 +43,17 @@ Dunker::Dunker()
     numMotors++;
 }
 
-int8_t Dunker::init(CO_t *CO)
+int8_t Dunker::init(CO_t *CO, uint8_t nodeId, uint8_t tpdoNum)
 {
     int8_t ret = 0;
     _CO = CO;
+    _nodeId = nodeId;
+    _tpdoNum = tpdoNum;
     /*Configure PDO Mapping on Device 0x1A*/
     uint32_t mappedRxObjects[] = {0x40000108, 0x40030108, 0x40040108, 0x43000120};
-    ret = mapRPDO(0, NODE_ID_MOTOR, mappedRxObjects, 4);
+    ret = mapRPDO(0, _nodeId, mappedRxObjects, 4);
     uint32_t mappedTxObjects[] = {0x40020120, 0x40010110};
-    ret += mapTPDO(0, NODE_ID_MOTOR, mappedTxObjects, 2, 0x100, 0x100);
+    ret += mapTPDO(0, _nodeId, mappedTxObjects, 2, 0x100, 0x100);
     return ret;
 }
 
@@ -58,7 +61,7 @@ int8_t Dunker::clearError()
 {
     *motor[motorNumber].command = CMD_ClearError;
     *motor[motorNumber].velocity = 0;
-    CO->TPDO[2]->sendRequest = 1;
+    CO->TPDO[_tpdoNum]->sendRequest = 1;
     return 0;
 }
 
@@ -66,7 +69,7 @@ int8_t Dunker::quickStop()
 {
     *motor[motorNumber].command = CMD_QuickStop;
     *motor[motorNumber].velocity = 0;
-    CO->TPDO[2]->sendRequest = 1;
+    CO->TPDO[_tpdoNum]->sendRequest = 1;
     return 0;
 }
 
@@ -74,7 +77,7 @@ int8_t Dunker::halt()
 {
     *motor[motorNumber].command = CMD_Halt;
     *motor[motorNumber].velocity = 0;
-    CO->TPDO[2]->sendRequest = 1;
+    CO->TPDO[_tpdoNum]->sendRequest = 1;
     return 0;
 }
 
@@ -82,7 +85,7 @@ int8_t Dunker::continueMovement()
 {
     *motor[motorNumber].command = CMD_Continue;
     *motor[motorNumber].velocity = 0;
-    CO->TPDO[2]->sendRequest = 1;
+    CO->TPDO[_tpdoNum]->sendRequest = 1;
     return 0;
 }
 
@@ -93,7 +96,7 @@ int8_t Dunker::setEnable(uint8_t value)
 
     *motor[motorNumber].mode = OPERATION_MODE;
     *motor[motorNumber].power = 1;
-    CO->TPDO[2]->sendRequest = 1;
+    CO->TPDO[_tpdoNum]->sendRequest = 1;
 
     /*Check for fault condition*/
     if (!(*motor[motorNumber].status & STAT_Error))
@@ -105,14 +108,14 @@ int8_t Dunker::setEnable(uint8_t value)
                 vTaskDelay(1 / portTICK_PERIOD_MS);
                 *motor[motorNumber].mode = OPERATION_MODE;
                 *motor[motorNumber].power = value;
-                CO->TPDO[2]->sendRequest = 1;
+                CO->TPDO[_tpdoNum]->sendRequest = 1;
             }
         }
         else
         {
             *motor[motorNumber].mode = OPERATION_MODE;
             *motor[motorNumber].power = value;
-            CO->TPDO[2]->sendRequest = 1;
+            CO->TPDO[_tpdoNum]->sendRequest = 1;
         }
     }
     else
@@ -131,7 +134,7 @@ int8_t Dunker::setSpeed(int32_t speed)
     if (!(*motor[motorNumber].status & STAT_Error))
     {
         *motor[motorNumber].velocity = speed;
-        CO->TPDO[2]->sendRequest = 1;
+        CO->TPDO[_tpdoNum]->sendRequest = 1;
     }
     else
     {

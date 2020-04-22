@@ -32,8 +32,8 @@ Granularity=0
 DynamicChannelsSupported=0
 CompactPDO=0
 GroupMessaging=0
-NrOfRXPDO=4
-NrOfTXPDO=3
+NrOfRXPDO=5
+NrOfTXPDO=4
 LSS_Supported=0
 ;LSS_Type=Server
 
@@ -145,40 +145,40 @@ SupportedObjects=53
 17=0x1401
 18=0x1402
 19=0x1403
-20=0x1600
-21=0x1601
-22=0x1602
-23=0x1603
-24=0x1800
-25=0x1801
-26=0x1802
-27=0x1A00
-28=0x1A01
-29=0x1A02
-30=0x1F80
-31=0x6000
-32=0x6001
-33=0x6002
-34=0x6003
-35=0x6004
-36=0x6100
-37=0x6101
-38=0x6200
-39=0x6201
-40=0x6202
-41=0x6203
-42=0x6204
-43=0x6205
-44=0x6206
-45=0x6207
-46=0x6300
-47=0x6301
-48=0x6302
-49=0x6303
-50=0x6304
-51=0x6305
-52=0x6306
-53=0x6307
+20=0x1404
+21=0x1600
+22=0x1601
+23=0x1602
+24=0x1603
+25=0x1604
+26=0x1800
+27=0x1801
+28=0x1802
+29=0x1803
+30=0x1A00
+31=0x1A01
+32=0x1A02
+33=0x1A03
+34=0x1F80
+35=0x6000
+36=0x6001
+37=0x6002
+38=0x6003
+39=0x6004
+40=0x6100
+41=0x6101
+42=0x6200
+43=0x6201
+44=0x6202
+45=0x6203
+46=0x6204
+47=0x6205
+48=0x6300
+49=0x6301
+50=0x6302
+51=0x6303
+52=0x6304
+53=0x6305
 
 [1003]
 ParameterName=Pre-defined error field
@@ -684,6 +684,39 @@ AccessType=rw
 DefaultValue=255
 PDOMapping=0
 
+[1404]
+ParameterName=RPDO communication parameter
+ObjectType=0x9
+;StorageLocation=ROM
+SubNumber=0x3
+
+[1404sub0]
+ParameterName=max sub-index
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0005
+AccessType=ro
+DefaultValue=2
+PDOMapping=0
+
+[1404sub1]
+ParameterName=COB-ID used by RPDO
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x0000019b
+PDOMapping=0
+
+[1404sub2]
+ParameterName=transmission type
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0005
+AccessType=rw
+DefaultValue=254
+PDOMapping=0
+
 [1600]
 ParameterName=RPDO mapping parameter
 ObjectType=0x9
@@ -957,7 +990,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=ro
-DefaultValue=1
+DefaultValue=2
 PDOMapping=0
 
 [1603sub1]
@@ -966,7 +999,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0007
 AccessType=ro
-DefaultValue=0x62030010
+DefaultValue=0x62020020
 PDOMapping=0
 
 [1603sub2]
@@ -975,7 +1008,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0007
 AccessType=ro
-DefaultValue=0x00000000
+DefaultValue=0x62010010
 PDOMapping=0
 
 [1603sub3]
@@ -1024,6 +1057,93 @@ DefaultValue=0x00000000
 PDOMapping=0
 
 [1603sub8]
+ParameterName=mapped object 8
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1604]
+ParameterName=RPDO mapping parameter
+ObjectType=0x9
+;StorageLocation=ROM
+SubNumber=0x9
+
+[1604sub0]
+ParameterName=Number of mapped objects
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0005
+AccessType=ro
+DefaultValue=2
+PDOMapping=0
+
+[1604sub1]
+ParameterName=mapped object 1
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x63020020
+PDOMapping=0
+
+[1604sub2]
+ParameterName=mapped object 2
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x63010010
+PDOMapping=0
+
+[1604sub3]
+ParameterName=mapped object 3
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1604sub4]
+ParameterName=mapped object 4
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1604sub5]
+ParameterName=mapped object 5
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1604sub6]
+ParameterName=mapped object 6
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1604sub7]
+ParameterName=mapped object 7
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1604sub8]
 ParameterName=mapped object 8
 ObjectType=0x7
 ;StorageLocation=RAM
@@ -1200,7 +1320,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=255
+DefaultValue=254
 PDOMapping=0
 
 [1802sub3]
@@ -1231,6 +1351,66 @@ DefaultValue=0
 PDOMapping=0
 
 [1802sub6]
+ParameterName=SYNC start value
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0005
+AccessType=rw
+DefaultValue=0
+PDOMapping=0
+
+[1803]
+ParameterName=TPDO communication parameter
+ObjectType=0x9
+;StorageLocation=ROM
+SubNumber=0x6
+
+[1803sub0]
+ParameterName=max sub-index
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0005
+AccessType=ro
+DefaultValue=6
+PDOMapping=0
+
+[1803sub1]
+ParameterName=COB-ID used by TPDO
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0007
+AccessType=rw
+DefaultValue=0x0000021b
+PDOMapping=0
+
+[1803sub2]
+ParameterName=transmission type
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0005
+AccessType=rw
+DefaultValue=254
+PDOMapping=0
+
+[1803sub3]
+ParameterName=inhibit time
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0006
+AccessType=rw
+DefaultValue=0
+PDOMapping=0
+
+[1803sub5]
+ParameterName=event timer
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0006
+AccessType=rw
+DefaultValue=0
+PDOMapping=0
+
+[1803sub6]
 ParameterName=SYNC start value
 ObjectType=0x7
 ;StorageLocation=RAM
@@ -1425,7 +1605,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=ro
-DefaultValue=3
+DefaultValue=4
 PDOMapping=0
 
 [1A02sub1]
@@ -1434,7 +1614,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0007
 AccessType=ro
-DefaultValue=0x62040010
+DefaultValue=0x62000008
 PDOMapping=0
 
 [1A02sub2]
@@ -1443,7 +1623,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0007
 AccessType=ro
-DefaultValue=0x62020010
+DefaultValue=0x62030008
 PDOMapping=0
 
 [1A02sub3]
@@ -1452,7 +1632,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0007
 AccessType=ro
-DefaultValue=0x62070008
+DefaultValue=0x62040008
 PDOMapping=0
 
 [1A02sub4]
@@ -1461,7 +1641,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0007
 AccessType=ro
-DefaultValue=0x00000000
+DefaultValue=0x62050020
 PDOMapping=0
 
 [1A02sub5]
@@ -1492,6 +1672,93 @@ DefaultValue=0x00000000
 PDOMapping=0
 
 [1A02sub8]
+ParameterName=mapped object 8
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1A03]
+ParameterName=TPDO mapping parameter
+ObjectType=0x9
+;StorageLocation=ROM
+SubNumber=0x9
+
+[1A03sub0]
+ParameterName=Number of mapped objects
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0005
+AccessType=ro
+DefaultValue=4
+PDOMapping=0
+
+[1A03sub1]
+ParameterName=mapped object 1
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x63000008
+PDOMapping=0
+
+[1A03sub2]
+ParameterName=mapped object 2
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x63030008
+PDOMapping=0
+
+[1A03sub3]
+ParameterName=mapped object 3
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x63040008
+PDOMapping=0
+
+[1A03sub4]
+ParameterName=mapped object 4
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x63050020
+PDOMapping=0
+
+[1A03sub5]
+ParameterName=mapped object 5
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1A03sub6]
+ParameterName=mapped object 6
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1A03sub7]
+ParameterName=mapped object 7
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0007
+AccessType=ro
+DefaultValue=0x00000000
+PDOMapping=0
+
+[1A03sub8]
 ParameterName=mapped object 8
 ObjectType=0x7
 ;StorageLocation=RAM
@@ -1795,145 +2062,109 @@ DefaultValue=
 PDOMapping=1
 
 [6200]
-ParameterName=motor_0_abort_connection_option_code_register
+ParameterName=motor_0_device_command
 ObjectType=0x7
 ;StorageLocation=RAM
-DataType=0x0003
+DataType=0x0005
 AccessType=rw
 DefaultValue=
 PDOMapping=1
 
 [6201]
-ParameterName=motor_0_error_code_register
+ParameterName=motor_0_error_register
 ObjectType=0x7
 ;StorageLocation=RAM
-DataType=0x0006
+DataType=0x0003
 AccessType=rw
 DefaultValue=
 PDOMapping=1
 
 [6202]
-ParameterName=motor_0_control_word
+ParameterName=motor_0_status_register
 ObjectType=0x7
 ;StorageLocation=RAM
-DataType=0x0006
+DataType=0x0007
 AccessType=rw
 DefaultValue=
 PDOMapping=1
 
 [6203]
-ParameterName=motor_0_status_word
+ParameterName=motor_0_mode_of_operation
 ObjectType=0x7
 ;StorageLocation=RAM
-DataType=0x0006
+DataType=0x0005
 AccessType=rw
 DefaultValue=
 PDOMapping=1
 
 [6204]
-ParameterName=motor_0_vl_target_velocity_register
+ParameterName=motor_0_power_enable
 ObjectType=0x7
 ;StorageLocation=RAM
-DataType=0x0003
+DataType=0x0005
 AccessType=rw
 DefaultValue=
 PDOMapping=1
 
 [6205]
-ParameterName=motor_0_vl_velocity_actual_value_register
-ObjectType=0x7
-;StorageLocation=RAM
-DataType=0x0003
-AccessType=ro
-DefaultValue=
-PDOMapping=1
-
-[6206]
-ParameterName=motor_0_position_actual_value_register
+ParameterName=motor_0_velocity_target_value
 ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0004
-AccessType=rw
-DefaultValue=
-PDOMapping=1
-
-[6207]
-ParameterName=motor_0_modes_of_operation
-ObjectType=0x7
-;StorageLocation=RAM
-DataType=0x0002
 AccessType=rw
 DefaultValue=
 PDOMapping=1
 
 [6300]
-ParameterName=motor_1_abort_connection_option_code_register
+ParameterName=motor_1_device_command
 ObjectType=0x7
 ;StorageLocation=RAM
-DataType=0x0003
+DataType=0x0005
 AccessType=rw
 DefaultValue=
 PDOMapping=1
 
 [6301]
-ParameterName=motor_1_error_code_register
+ParameterName=motor_1_error_register
 ObjectType=0x7
 ;StorageLocation=RAM
-DataType=0x0006
+DataType=0x0003
 AccessType=rw
 DefaultValue=
 PDOMapping=1
 
 [6302]
-ParameterName=motor_1_control_word
+ParameterName=motor_1_status_register
 ObjectType=0x7
 ;StorageLocation=RAM
-DataType=0x0006
+DataType=0x0007
 AccessType=rw
 DefaultValue=
 PDOMapping=1
 
 [6303]
-ParameterName=motor_1_status_word
+ParameterName=motor_1_mode_of_operation
 ObjectType=0x7
 ;StorageLocation=RAM
-DataType=0x0006
+DataType=0x0005
 AccessType=rw
 DefaultValue=
 PDOMapping=1
 
 [6304]
-ParameterName=motor_1_vl_target_velocity_register
+ParameterName=motor_1_power_enable
 ObjectType=0x7
 ;StorageLocation=RAM
-DataType=0x0003
+DataType=0x0005
 AccessType=rw
 DefaultValue=
 PDOMapping=1
 
 [6305]
-ParameterName=motor_1_vl_velocity_actual_value_register
-ObjectType=0x7
-;StorageLocation=RAM
-DataType=0x0003
-AccessType=ro
-DefaultValue=
-PDOMapping=1
-
-[6306]
-ParameterName=motor_1_position_actual_value_register
+ParameterName=motor_1_velocity_target_value
 ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0004
-AccessType=rw
-DefaultValue=
-PDOMapping=1
-
-[6307]
-ParameterName=motor_1_modes_of_operation
-ObjectType=0x7
-;StorageLocation=RAM
-DataType=0x0002
 AccessType=rw
 DefaultValue=
 PDOMapping=1

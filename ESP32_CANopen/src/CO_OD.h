@@ -53,9 +53,9 @@
 
 /*******************************************************************************
    FILE INFO:
-      FileName:     
+      FileName:     Desaster4.eds
       FileVersion:  1
-      CreationTime: 12:05
+      CreationTime: 12:05PM
       CreationDate: 03-30-2020
       CreatedBy:    Alexander Miller, Mathias Parys
 ******************************************************************************/
@@ -75,20 +75,20 @@
 *******************************************************************************/
   #define CO_NO_SYNC                     1   //Associated objects: 1005-1007
   #define CO_NO_EMERGENCY                1   //Associated objects: 1014, 1015
-  #define CO_NO_TIME                       0   //Associated objects: 1012, 1013
+  #define CO_NO_TIME                     0   //Associated objects: 1012, 1013
   #define CO_NO_SDO_SERVER               1   //Associated objects: 1200-127F
   #define CO_NO_SDO_CLIENT               1   //Associated objects: 1280-12FF
   #define CO_NO_LSS_SERVER               0   //LSS Slave
   #define CO_NO_LSS_CLIENT               0   //LSS Master
-  #define CO_NO_RPDO                     4   //Associated objects: 14xx, 16xx
-  #define CO_NO_TPDO                     3   //Associated objects: 18xx, 1Axx
+  #define CO_NO_RPDO                     5   //Associated objects: 14xx, 16xx
+  #define CO_NO_TPDO                     4   //Associated objects: 18xx, 1Axx
   #define CO_NO_NMT_MASTER               1
 
 
 /*******************************************************************************
    OBJECT DICTIONARY
 *******************************************************************************/
-   #define CO_OD_NoOfElements             47
+   #define CO_OD_NoOfElements             57
 
 
 /*******************************************************************************
@@ -276,6 +276,13 @@
         #define OD_1403_1_RPDOCommunicationParameter_COB_IDUsedByRPDO 1
         #define OD_1403_2_RPDOCommunicationParameter_transmissionType 2
 
+/*1404 */
+        #define OD_1404_RPDOCommunicationParameter                  0x1404
+
+        #define OD_1404_0_RPDOCommunicationParameter_maxSubIndex    0
+        #define OD_1404_1_RPDOCommunicationParameter_COB_IDUsedByRPDO 1
+        #define OD_1404_2_RPDOCommunicationParameter_transmissionType 2
+
 /*1600 */
         #define OD_1600_RPDOMappingParameter                        0x1600
 
@@ -328,6 +335,19 @@
         #define OD_1603_7_RPDOMappingParameter_mappedObject7        7
         #define OD_1603_8_RPDOMappingParameter_mappedObject8        8
 
+/*1604 */
+        #define OD_1604_RPDOMappingParameter                        0x1604
+
+        #define OD_1604_0_RPDOMappingParameter_maxSubIndex          0
+        #define OD_1604_1_RPDOMappingParameter_mappedObject1        1
+        #define OD_1604_2_RPDOMappingParameter_mappedObject2        2
+        #define OD_1604_3_RPDOMappingParameter_mappedObject3        3
+        #define OD_1604_4_RPDOMappingParameter_mappedObject4        4
+        #define OD_1604_5_RPDOMappingParameter_mappedObject5        5
+        #define OD_1604_6_RPDOMappingParameter_mappedObject6        6
+        #define OD_1604_7_RPDOMappingParameter_mappedObject7        7
+        #define OD_1604_8_RPDOMappingParameter_mappedObject8        8
+
 /*1800 */
         #define OD_1800_TPDOCommunicationParameter                  0x1800
 
@@ -360,6 +380,17 @@
         #define OD_1802_4_TPDOCommunicationParameter_compatibilityEntry 4
         #define OD_1802_5_TPDOCommunicationParameter_eventTimer     5
         #define OD_1802_6_TPDOCommunicationParameter_SYNCStartValue 6
+
+/*1803 */
+        #define OD_1803_TPDOCommunicationParameter                  0x1803
+
+        #define OD_1803_0_TPDOCommunicationParameter_maxSubIndex    0
+        #define OD_1803_1_TPDOCommunicationParameter_COB_IDUsedByTPDO 1
+        #define OD_1803_2_TPDOCommunicationParameter_transmissionType 2
+        #define OD_1803_3_TPDOCommunicationParameter_inhibitTime    3
+        #define OD_1803_4_TPDOCommunicationParameter_compatibilityEntry 4
+        #define OD_1803_5_TPDOCommunicationParameter_eventTimer     5
+        #define OD_1803_6_TPDOCommunicationParameter_SYNCStartValue 6
 
 /*1a00 */
         #define OD_1a00_TPDOMappingParameter                        0x1a00
@@ -399,6 +430,19 @@
         #define OD_1a02_6_TPDOMappingParameter_mappedObject6        6
         #define OD_1a02_7_TPDOMappingParameter_mappedObject7        7
         #define OD_1a02_8_TPDOMappingParameter_mappedObject8        8
+
+/*1a03 */
+        #define OD_1a03_TPDOMappingParameter                        0x1a03
+
+        #define OD_1a03_0_TPDOMappingParameter_maxSubIndex          0
+        #define OD_1a03_1_TPDOMappingParameter_mappedObject1        1
+        #define OD_1a03_2_TPDOMappingParameter_mappedObject2        2
+        #define OD_1a03_3_TPDOMappingParameter_mappedObject3        3
+        #define OD_1a03_4_TPDOMappingParameter_mappedObject4        4
+        #define OD_1a03_5_TPDOMappingParameter_mappedObject5        5
+        #define OD_1a03_6_TPDOMappingParameter_mappedObject6        6
+        #define OD_1a03_7_TPDOMappingParameter_mappedObject7        7
+        #define OD_1a03_8_TPDOMappingParameter_mappedObject8        8
 
 /*1f80 */
         #define OD_1f80_NMTStartup                                  0x1f80
@@ -479,6 +523,24 @@
 /*6205 */
         #define OD_6205_motor_0_velocity_target_value               0x6205
 
+/*6300 */
+        #define OD_6300_motor_1_device_command                      0x6300
+
+/*6301 */
+        #define OD_6301_motor_1_error_register                      0x6301
+
+/*6302 */
+        #define OD_6302_motor_1_status_register                     0x6302
+
+/*6303 */
+        #define OD_6303_motor_1_mode_of_operation                   0x6303
+
+/*6304 */
+        #define OD_6304_motor_1_power_enable                        0x6304
+
+/*6305 */
+        #define OD_6305_motor_1_velocity_target_value               0x6305
+
 /*******************************************************************************
    STRUCTURES FOR VARIABLES IN DIFFERENT MEMORY LOCATIONS
 *******************************************************************************/
@@ -488,10 +550,10 @@
 struct sCO_OD_ROM{
                UNSIGNED32     FirstWord;
 
-/*1400      */ OD_RPDOCommunicationParameter_t RPDOCommunicationParameter[4];
-/*1600      */ OD_RPDOMappingParameter_t RPDOMappingParameter[4];
-/*1800      */ OD_TPDOCommunicationParameter_t TPDOCommunicationParameter[3];
-/*1a00      */ OD_TPDOMappingParameter_t TPDOMappingParameter[3];
+/*1400      */ OD_RPDOCommunicationParameter_t RPDOCommunicationParameter[5];
+/*1600      */ OD_RPDOMappingParameter_t RPDOMappingParameter[5];
+/*1800      */ OD_TPDOCommunicationParameter_t TPDOCommunicationParameter[4];
+/*1a00      */ OD_TPDOMappingParameter_t TPDOMappingParameter[4];
 
                UNSIGNED32     LastWord;
 };
@@ -533,6 +595,12 @@ struct sCO_OD_RAM{
 /*6203      */ UNSIGNED8       motor_0_mode_of_operation;
 /*6204      */ UNSIGNED8       motor_0_power_enable;
 /*6205      */ INTEGER32       motor_0_velocity_target_value;
+/*6300      */ UNSIGNED8       motor_1_device_command;
+/*6301      */ INTEGER16       motor_1_error_register;
+/*6302      */ UNSIGNED32      motor_1_status_register;
+/*6303      */ UNSIGNED8       motor_1_mode_of_operation;
+/*6304      */ UNSIGNED8       motor_1_power_enable;
+/*6305      */ INTEGER32       motor_1_velocity_target_value;
 
                UNSIGNED32     LastWord;
 };
@@ -707,6 +775,24 @@ extern struct sCO_OD_EEPROM CO_OD_EEPROM;
 
 /*6205, Data Type: INTEGER32 */
         #define OD_motor_0_velocity_target_value                    CO_OD_RAM.motor_0_velocity_target_value
+
+/*6300, Data Type: UNSIGNED8 */
+        #define OD_motor_1_device_command                           CO_OD_RAM.motor_1_device_command
+
+/*6301, Data Type: INTEGER16 */
+        #define OD_motor_1_error_register                           CO_OD_RAM.motor_1_error_register
+
+/*6302, Data Type: UNSIGNED32 */
+        #define OD_motor_1_status_register                          CO_OD_RAM.motor_1_status_register
+
+/*6303, Data Type: UNSIGNED8 */
+        #define OD_motor_1_mode_of_operation                        CO_OD_RAM.motor_1_mode_of_operation
+
+/*6304, Data Type: UNSIGNED8 */
+        #define OD_motor_1_power_enable                             CO_OD_RAM.motor_1_power_enable
+
+/*6305, Data Type: INTEGER32 */
+        #define OD_motor_1_velocity_target_value                    CO_OD_RAM.motor_1_velocity_target_value
 
 #endif
 // clang-format on

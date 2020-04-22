@@ -19,9 +19,12 @@
 //----------------------------------
 
 //#### CANOPEN CONFIG ####
-#define CAN_BITRATE 1000   /** 1Mbit*/
-#define NODE_ID_SELF 0x42  /** ESP32 Modul ID*/
-#define NODE_ID_MOTOR 0x1A /** Dunker Motor ID*/
+#define CAN_BITRATE 1000    /** 1Mbit*/
+#define NODE_ID_SELF 0x42   /** ESP32 Modul ID*/
+#define NODE_ID_MOTOR0 0x1A /** Dunker Motor ID*/
+#define NODE_ID_MOTOR1 0x1B /** Dunker Motor ID*/
+#define NODE_ID_GYRO 0x04   /** Dunker Motor ID*/
+#define NODE_ID_HATOX 0x03  /** Dunker Motor ID*/
 //----------------------------------
 
 //####  ROSSERIAL CONFIG  ####

@@ -58,7 +58,7 @@ private:
 
     static constexpr int16_t OPERATION_MODE = 0x03; //Operation Mode 2 "Special Profile Velocity"
 
-    static constexpr uint8_t MAX_MOTORS = 1; //Maximum number of motors
+    static constexpr uint8_t MAX_MOTORS = 2; //Maximum number of motors
 
     /**
      * @brief Struct for all nessesary registers in the object-dictionary
@@ -76,9 +76,11 @@ private:
 
     static motorRegister motor[MAX_MOTORS];
 
-public:
-    CO_t *_CO;
+    CO_t *_CO = nullptr;
+    uint8_t _nodeId = 0x00;
+    uint8_t _tpdoNum = 0x00;
 
+public:
     /*Functions*/
 
     /**
@@ -91,9 +93,11 @@ public:
      * @brief Initialize motor by setting the RPDO- and TPDO-Mapping
      * 
      * @param CO Pointer to CANopen object
+     * @param nodeId CANopen node ID
+     * @param tpdoNum Relevant TPDO-Number (Count from 0)
      * @return int8_t 0 = No Error, -n = Errorcode of mapRPDO + mapTPDO
      */
-    int8_t init(CO_t *CO);
+    int8_t init(CO_t *CO, uint8_t nodeId, uint8_t tpdoNum);
 
     /**
      * @brief Clear potential errors and reenable drive

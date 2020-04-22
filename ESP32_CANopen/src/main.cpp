@@ -18,12 +18,17 @@
 #include "modul_config.h"
 #include "dunker.h"
 #include "Gyro.h"
-//#include "imslROS.h"
+#include "imslROS.h"
 
 #include "ros.h"
 
-Dunker motor;
+/*System components*/
+Dunker motor0;
 Gyro hg_gyro;
+
+/* TEST*/
+uint8_t counter = 0;
+/* TEST_END */
 
 volatile uint32_t coInterruptCounter = 0U; /* variable increments each millisecond */
 
@@ -52,9 +57,7 @@ void mainTask(void *pvParameter)
     {
       ESP_LOGE("mainTask", "CO_init failed. Errorcode: %d", err);
       CO_errorReport(CO->em, CO_EM_MEMORY_ALLOCATION_ERROR, CO_EMC_SOFTWARE_INTERNAL, err);
-      while (1)
-      {
-      }
+      esp_restart();
     }
     /* Configure Timer interrupt function for execution every CO_MAIN_TASK_INTERVAL */
     ESP_ERROR_CHECK(esp_timer_create(&coMainTaskArgs, &periodicTimer));
@@ -66,21 +69,18 @@ void mainTask(void *pvParameter)
     reset = CO_RESET_NOT;
     coInterruptCounterPrevious = coInterruptCounter;
 
-    /*Set Operating Mode of Slave to Operational*/
-    CO_sendNMTcommand(CO, 0x01, NODE_ID_MOTOR);
+    /*Set Operating Mode of Slaves to Operational*/
+    CO_sendNMTcommand(CO, 0x01, NODE_ID_MOTOR0);
+    //CO_sendNMTcommand(CO, 0x01, NODE_ID_MOTOR1);
+    //CO_sendNMTcommand(CO, 0x01, NODE_ID_GYRO);
+    //CO_sendNMTcommand(CO, 0x01, NODE_ID_HATOX);
+
+    /* Initialise system components */
+    motor0.init(CO, NODE_ID_MOTOR0, 2);
+    hg_gyro.init(CO);
 
     /* application init code goes here. */
     //rosserialSetup();
-
-    int16_t speed = 0;
-    uint8_t init = 0;
-    uint8_t toggle = 0;
-    uint8_t activate_gyro = 0;
-
-    if (activate_gyro)
-    {
-      hg_gyro.init(CO);
-    }
 
     while (reset == CO_RESET_NOT)
     {
@@ -95,39 +95,36 @@ void mainTask(void *pvParameter)
       reset = CO_process(CO, coInterruptCounterDiff, NULL);
 
       /* Nonblocking application code may go here. */
-      if (init == 0)
+      if (counter == 0)
       {
-        motor.init(CO);
-        motor.setEnable(1);
-        init = 1;
+        motor0.setEnable(1);
+        motor0.setSpeed(1000);
+        counter++;
       }
-      if (coInterruptCounter > 20000 && init == 1)
+      if (coInterruptCounter > 4000 && counter == 1)
       {
-        motor.halt();
-        init = 2;
+        motor0.setSpeed(3000);
+        counter++;
       }
-
-      if (toggle)
+      if (coInterruptCounter > 8000 && counter == 2)
       {
-        speed += 100;
+        motor0.quickStop();
+        counter++;
       }
-      else
+      if (coInterruptCounter > 12000 && counter == 3)
       {
-        speed -= 100;
+        motor0.continueMovement();
+        motor0.setSpeed(1000);
+        counter++;
       }
-      if (speed >= 4950 || speed <= -4950)
+      if (coInterruptCounter > 16000 && counter == 4)
       {
-        toggle = !toggle;
-      }
-
-      motor.setSpeed(speed);
-
-      if (activate_gyro)
-      {
-        ESP_LOGI("GYRO_Test", "lifeCounter: %d", hg_gyro.getLifeCounter());
+        motor0.halt();
+        motor0.setEnable(0);
+        counter++;
       }
 
-      // ESP_LOGI("MAIN", "%d", voltage);
+      //ROS Publish Messages
       //rosserialPublish();
       //ROS Handle Messages
       //NodeHandleSpin();
@@ -140,10 +137,6 @@ void mainTask(void *pvParameter)
      * ***************************************************************/
   /* reset */
   esp_restart();
-  while (true)
-  {
-    ESP_LOGE("mainTask", "Application END");
-  }
 }
 
 /* CanOpen-Task executes in constant intervals ********************************/
