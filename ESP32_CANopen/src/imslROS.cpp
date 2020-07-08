@@ -66,20 +66,17 @@ void sub_status_cb(const std_msgs::Byte &status_msg)
   {
     if (rob_status == 0)
     {
-      const char text[] = {0x02, 0x0A, 0x49, 0x64, 0x6C, 0x65, 0x00, 0x00};
-      setText(2, 0x0A, text, 6);
+      setText(3, 7, "Idle..", 6);
       last_rob_status = rob_status;
     }
     if (rob_status == 1)
     {
-      const char text[] = {0x02, 0x0A, 0x45, 0x2D, 0x53, 0x74, 0x6F, 0x70};
-      setText(2, 0x0A, text, 6);
+      setText(3, 7, "E-Stop", 6);
       last_rob_status = rob_status;
     }
     if (rob_status == 2)
     {
-      const char text[] = {0x02, 0x0A, 0x54, 0x77, 0x69, 0x73, 0x74, 0x00};
-      setText(2, 0x0A, text, 6);
+      setText(3, 7, "Twist ", 6);
       last_rob_status = rob_status;
     }
   }
@@ -100,7 +97,7 @@ void sub_minimax_status_cb(const std_msgs::Int8 &status_msg)
     setText(3, 5, "Alarm!", 6);
     break;
   case 100:
-    setText(3, 5, "Idle  ", 6);
+    setText(3, 5, "Idle..", 6);
     break;
 
   default:
@@ -125,17 +122,6 @@ void handleButtons()
     {
       ++speedLevel;
     }
-
-    linearVelocity = (MAX_LINEAR_VEL / MAX_SPEED_LEVEL) * speedLevel;
-    angularVelocity = (MAX_ANGULAR_VEL / MAX_SPEED_LEVEL) * speedLevel;
-    if (linearVelocity > MAX_LINEAR_VEL)
-    {
-      linearVelocity = MAX_LINEAR_VEL;
-    }
-    if (angularVelocity > MAX_ANGULAR_VEL)
-    {
-      angularVelocity = MAX_ANGULAR_VEL;
-    }
   }
   //Decrease speed (Button Turtle)
   if ((getButtonStatus() & HATOX_BTN_SLOW) && (hatoxButtonsReleased == true))
@@ -144,17 +130,6 @@ void handleButtons()
     if (speedLevel > 1)
     {
       --speedLevel;
-    }
-
-    linearVelocity = (MAX_LINEAR_VEL / MAX_SPEED_LEVEL) * speedLevel;
-    angularVelocity = (MAX_ANGULAR_VEL / MAX_SPEED_LEVEL) * speedLevel;
-    if (linearVelocity < 0)
-    {
-      linearVelocity = 0;
-    }
-    if (angularVelocity < 0)
-    {
-      angularVelocity = 0;
     }
   }
 
@@ -196,7 +171,7 @@ void handleButtons()
   //Shutdown MT-D4 (Button 6)
   if (getButtonStatus() & HATOX_BTN_6 && hatoxButtonsReleased == true)
   {
-    setText(2, 10, "SHDWN!", 6);
+    setText(3, 8, "SHDWN!", 6);
     hatoxButtonsReleased = false;
     mtd4ShutdownMsg.data = true;
     mtd4ShutdownPub.publish(&mtd4ShutdownMsg);
@@ -224,9 +199,29 @@ void handleSpeed()
 {
   if (last_speedLevel != speedLevel)
   {
-    const char text[] = {0x53, 0x3A, (unsigned char)(0x30 + speedLevel), 0, 0, 0};
-    setText(1, 14, text, 1);
     last_speedLevel = speedLevel;
+
+    linearVelocity = (MAX_LINEAR_VEL / MAX_SPEED_LEVEL) * speedLevel;
+    angularVelocity = (MAX_ANGULAR_VEL / MAX_SPEED_LEVEL) * speedLevel;
+    if (linearVelocity > MAX_LINEAR_VEL)
+    {
+      linearVelocity = MAX_LINEAR_VEL;
+    }
+    if (angularVelocity > MAX_ANGULAR_VEL)
+    {
+      angularVelocity = MAX_ANGULAR_VEL;
+    }
+    if (linearVelocity < -MAX_LINEAR_VEL)
+    {
+      linearVelocity = -MAX_LINEAR_VEL;
+    }
+    if (angularVelocity < -MAX_ANGULAR_VEL)
+    {
+      angularVelocity = -MAX_ANGULAR_VEL;
+    }
+    //const char text[] = {(unsigned char)(0x30 + speedLevel), 32, 32, 32, 32, 32};
+    const char text[] = {(unsigned char)(0x30 + linearVelocity), ',', (unsigned char)(0x30 + 10 * (linearVelocity - (int)linearVelocity)), 'm', '/', 's'};
+    setText(2, 8, text, 6);
   }
 
   //Set values in twist message based on hatox data

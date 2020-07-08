@@ -23,5 +23,6 @@ uint8_t getRightStickY();
 uint8_t getStickDir();
 uint16_t getButtonStatus();
 uint8_t setText(uint8_t line, uint8_t column, const char *text, uint8_t len);
+uint8_t initText();
 
 #endif

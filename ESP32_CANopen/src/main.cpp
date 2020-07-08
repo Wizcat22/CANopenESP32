@@ -70,7 +70,7 @@ void mainTask(void *pvParameter)
     /* application init code goes here. */
     rosserialSetup();
     /* application init code ends here. */
-
+    initText();
     while (reset == CO_RESET_NOT)
     {
       /* loop for normal program execution ******************************************/

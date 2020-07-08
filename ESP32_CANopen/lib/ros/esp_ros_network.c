@@ -46,8 +46,6 @@ static void eth_gpio_config_rmii(void)
 }
 #endif
 
-
-
 static esp_err_t network_event_handler(void *ctx, system_event_t *event)
 {
   tcpip_adapter_ip_info_t ip;
@@ -77,11 +75,11 @@ static esp_err_t network_event_handler(void *ctx, system_event_t *event)
     ESP_LOGI(TAG, "Ethernet Stopped");
     break;
   case SYSTEM_EVENT_STA_START:
-  ESP_LOGI(TAG, "Start AP");
+    ESP_LOGI(TAG, "Start AP");
     esp_wifi_connect();
     break;
   case SYSTEM_EVENT_STA_GOT_IP:
-    ESP_LOGI(TAG, "got ip:%s",ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
+    ESP_LOGI(TAG, "got ip:%s", ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
     xEventGroupSetBits(network_event_group, IPV4_GOTIP_BIT);
     break;
   case SYSTEM_EVENT_STA_DISCONNECTED:
@@ -162,7 +160,10 @@ void ros_tcp_connect(const char *host_ip, int port_num)
   {
     ESP_LOGE(TAG, "Socket unable to connect: errno %d", errno);
   }
-  ESP_LOGI(TAG, "Successfully connected");
+  if (sock > 0 || err == 0)
+  {
+    ESP_LOGI(TAG, "Socket connection successfull");
+  }
 }
 
 void ros_tcp_send(uint8_t *data, int length)
