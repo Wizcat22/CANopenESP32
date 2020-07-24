@@ -1,5 +1,5 @@
 /**
- * @file imslRos.cc
+ * @file imslROS.cpp
  * @author Alexander Miller (alexander.miller@fh-dortmund.de)
  * @author Mathias Parys    (mathias.parys@fh-dortmund.de)
  * @brief Rosserial
@@ -8,6 +8,17 @@
  * 
  * @copyright Copyright (c) 2019
  * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include "imslROS.h"
@@ -36,14 +47,12 @@ ros::NodeHandle nh; /** Rosserial nodehandle */
 std_msgs::UInt8MultiArray hatoxDataMsg; /** Rosmessage for hatox data */
 geometry_msgs::Twist hatoxVelMsg;       /** Rosmessage for twist data */
 std_msgs::Bool hatoxEnableMsg;          /** Rosmessage for MxVk LOS Module data */
-std_msgs::Int8 minimaxModulCtrlMsg;     /** Rosmessage for hatox data */
 std_msgs::Bool mtd4ShutdownMsg;
 
 /*Publisher*/
 ros::Publisher hatoxDataPub("hatox_data", &hatoxDataMsg);             /** Rosserial publisher for topic "/hatox_data" */
 ros::Publisher hatoxVelPub("cmd_vel", &hatoxVelMsg);                  /** Rosserial publisher for topic "/cmd_vel" */
 ros::Publisher hatoxEnablePub("enable", &hatoxEnableMsg);             /** Rosserial publisher for topic "/enable" */
-ros::Publisher minimaxModulCtrlPub("LOS_CMDS", &minimaxModulCtrlMsg); /** Rosserial publisher for topic "/LOS_CMDS" */
 ros::Publisher mtd4ShutdownPub("shutdown", &mtd4ShutdownMsg);         /** Rosserial publisher for topic "/shutdown" */
 
 /*Variables*/
@@ -82,33 +91,8 @@ void sub_status_cb(const std_msgs::Byte &status_msg)
   }
 }
 
-//MxVk Module Status Callback
-void sub_minimax_status_cb(const std_msgs::Int8 &status_msg)
-{
-  switch (status_msg.data)
-  {
-  case 1:
-    setText(3, 5, "Stat 1", 6);
-    break;
-  case 2:
-    setText(3, 5, "Alarm!", 6);
-    break;
-  case 3:
-    setText(3, 5, "Alarm!", 6);
-    break;
-  case 100:
-    setText(3, 5, "Idle..", 6);
-    break;
-
-  default:
-    setText(3, 5, "Error!", 6);
-    break;
-  }
-}
-
 /*Subscriber*/
 ros::Subscriber<std_msgs::Byte> sub("ctrl_status", sub_status_cb);             /*Subscriber for Robot Status Message: /ctrl_status*/
-ros::Subscriber<std_msgs::Int8> subMinimax("LOS_STAT", sub_minimax_status_cb); /*Subscriber for MxVk Module Status Message: LOS_STAT*/
 
 /*User Functions*/
 
@@ -148,49 +132,18 @@ void handleButtons()
     hatoxEnablePub.publish(&hatoxEnableMsg);
     hatoxButtonsReleased = false;
   }
-
-  //Minimax SEND 1 (Button 3)
-  if (getButtonStatus() & HATOX_BTN_3 && hatoxButtonsReleased == true)
-  {
-    minimaxModulCtrlMsg.data = 1;
-    minimaxModulCtrlPub.publish(&minimaxModulCtrlMsg);
-  }
-  //Minimax SEND 2 (Button 4)
-  if (getButtonStatus() & HATOX_BTN_4 && hatoxButtonsReleased == true)
-  {
-    minimaxModulCtrlMsg.data = 2;
-    minimaxModulCtrlPub.publish(&minimaxModulCtrlMsg);
-  }
-  //Minimax SEND 3 (Button 5)
-  if (getButtonStatus() & HATOX_BTN_5 && hatoxButtonsReleased == true)
-  {
-    hatoxButtonsReleased = false;
-    minimaxModulCtrlMsg.data = 3;
-    minimaxModulCtrlPub.publish(&minimaxModulCtrlMsg);
-  }
   //Shutdown MT-D4 (Button 6)
   if (getButtonStatus() & HATOX_BTN_6 && hatoxButtonsReleased == true)
   {
-    setText(3, 8, "SHDWN!", 6);
+    setText(3, 7, "SHDWN!", 6);
     hatoxButtonsReleased = false;
     mtd4ShutdownMsg.data = true;
     mtd4ShutdownPub.publish(&mtd4ShutdownMsg);
   }
-
-  // //Minimax SEND 4 (Button 6)
-  // if (data[6] & 0b0000010 && hatoxButtonsReleased == true)
-  // {
-  //   hatoxButtonsReleased = false;
-  //   minimaxModulCtrlMsg.data = 4;
-  //   minimaxModulCtrlPub.publish(&minimaxModulCtrlMsg);
-  // }
-
   /*No Button Pressed*/
   if (getButtonStatus() == 128)
   {
     hatoxButtonsReleased = true;
-    minimaxModulCtrlMsg.data = 5;
-    minimaxModulCtrlPub.publish(&minimaxModulCtrlMsg);
   }
 }
 
@@ -202,7 +155,7 @@ void handleSpeed()
     last_speedLevel = speedLevel;
 
     linearVelocity = (MAX_LINEAR_VEL / MAX_SPEED_LEVEL) * speedLevel;
-    angularVelocity = (MAX_ANGULAR_VEL / MAX_SPEED_LEVEL) * speedLevel;
+    angularVelocity = MAX_ANGULAR_VEL; //(MAX_ANGULAR_VEL / MAX_SPEED_LEVEL) * speedLevel;
     if (linearVelocity > MAX_LINEAR_VEL)
     {
       linearVelocity = MAX_LINEAR_VEL;
@@ -219,13 +172,19 @@ void handleSpeed()
     {
       angularVelocity = -MAX_ANGULAR_VEL;
     }
-    //const char text[] = {(unsigned char)(0x30 + speedLevel), 32, 32, 32, 32, 32};
     const char text[] = {(unsigned char)(0x30 + linearVelocity), ',', (unsigned char)(0x30 + 10 * (linearVelocity - (int)linearVelocity)), 'm', '/', 's'};
     setText(2, 8, text, 6);
   }
 
   //Set values in twist message based on hatox data
-  hatoxVelMsg.linear.x = (getLeftStickY() - 127) / 127.0f * -linearVelocity;
+  hatoxVelMsg.linear.x = (getLeftStickY() - 127) / 127.0f * linearVelocity;
+
+  //Limit reverse velocity
+  if (hatoxVelMsg.linear.x < MAX_LINEAR_VEL_REVERSE)
+  {
+    hatoxVelMsg.linear.x = MAX_LINEAR_VEL_REVERSE;
+  }
+
   hatoxVelMsg.linear.y = (getLeftStickX() - 127) / 127.0f * linearVelocity;
   hatoxVelMsg.linear.z = 0;
   hatoxVelMsg.angular.x = 0;
@@ -245,10 +204,8 @@ void rosserialSetup()
   nh.advertise(hatoxDataPub);
   nh.advertise(hatoxVelPub);
   nh.advertise(hatoxEnablePub);
-  nh.advertise(minimaxModulCtrlPub);
   nh.advertise(mtd4ShutdownPub);
   nh.subscribe(sub);
-  nh.subscribe(subMinimax);
 }
 
 void rosserialPublish()
