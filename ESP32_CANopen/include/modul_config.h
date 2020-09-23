@@ -31,7 +31,7 @@
 
 //####  ROS MESSAGE CONFIG  ####
 
-#define MAX_LINEAR_VEL 1.0          /** Maximum linear velocity in m/s */
+#define MAX_LINEAR_VEL 5.0          /** Maximum linear velocity in m/s */
 #define MAX_ANGULAR_VEL 0.5         /** Maximum angular velocity in rad/s */
 #define MAX_SPEED_LEVEL 10          /** Maximum angular velocity in rad/s */
 #define MAX_LINEAR_VEL_REVERSE -0.2 /** Maximum linear reverse velocity in m/s */

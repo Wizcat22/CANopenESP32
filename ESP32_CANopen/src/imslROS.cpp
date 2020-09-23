@@ -36,6 +36,8 @@
 #include "std_msgs/Int8.h"
 #include "std_msgs/UInt8MultiArray.h"
 #include "std_srvs/SetBool.h"
+//#include "ros_custom_messages/modul_info.h"
+
 extern "C"
 {
 #include "Hatox.h"
@@ -48,12 +50,14 @@ std_msgs::UInt8MultiArray hatoxDataMsg; /** Rosmessage for hatox data */
 geometry_msgs::Twist hatoxVelMsg;       /** Rosmessage for twist data */
 std_msgs::Bool hatoxEnableMsg;          /** Rosmessage for MxVk LOS Module data */
 std_msgs::Bool mtd4ShutdownMsg;
+//ros_custom_messages::modul_info mtd4TestMsg;
 
 /*Publisher*/
 ros::Publisher hatoxDataPub("hatox_data", &hatoxDataMsg);             /** Rosserial publisher for topic "/hatox_data" */
 ros::Publisher hatoxVelPub("cmd_vel", &hatoxVelMsg);                  /** Rosserial publisher for topic "/cmd_vel" */
 ros::Publisher hatoxEnablePub("enable", &hatoxEnableMsg);             /** Rosserial publisher for topic "/enable" */
 ros::Publisher mtd4ShutdownPub("shutdown", &mtd4ShutdownMsg);         /** Rosserial publisher for topic "/shutdown" */
+//ros::Publisher mtd4TestPub("modul_info", &mtd4TestMsg);         /** Rosserial publisher for topic "/shutdown" */
 
 /*Variables*/
 uint8_t rob_status = 0;        /* Robot Status*/
@@ -205,11 +209,13 @@ void rosserialSetup()
   nh.advertise(hatoxVelPub);
   nh.advertise(hatoxEnablePub);
   nh.advertise(mtd4ShutdownPub);
+  //nh.advertise(mtd4TestPub);
   nh.subscribe(sub);
 }
 
 void rosserialPublish()
 {
+  if(nh.connected()){
   //Hatox data [PDO1_0,PDO1_1,PDO1_2,PDO1_3,PDO1_4,PDO2_0,PDO2_1]
   uint8_t data[] = {OD_statusRegister[ODA_statusRegister_analogDat0], OD_statusRegister[ODA_statusRegister_analogDat1], OD_statusRegister[ODA_statusRegister_analogDat2], OD_statusRegister[ODA_statusRegister_analogDat3], OD_statusRegister[ODA_statusRegister_analogDat4], OD_statusRegister[ODA_statusRegister_digitalDat0], OD_statusRegister[ODA_statusRegister_digitalDat1]};
   hatoxDataMsg.data = data; /**  */
@@ -217,8 +223,19 @@ void rosserialPublish()
   hatoxDataMsg.data_length = 7; /**  */
   hatoxDataPub.publish(&hatoxDataMsg);
 
+  // mtd4TestMsg.id = 0xAF;
+  // mtd4TestMsg.ip[0] = 0xDE;
+  // mtd4TestMsg.ip[1] = 0xAD;
+  // mtd4TestMsg.ip[2] = 0xAF;
+  // mtd4TestMsg.ip[3] = 0xFE;
+  // mtd4TestMsg.name = "AFFE";
+  // mtd4TestMsg.power = 0xFE;
+
+  //mtd4TestPub.publish(&mtd4TestMsg);
+
   handleButtons();
   handleSpeed();
+  }
 }
 
 void NodeHandleSpin()

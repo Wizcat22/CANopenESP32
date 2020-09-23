@@ -60,6 +60,7 @@ static esp_err_t network_event_handler(void *ctx, system_event_t *event)
     xEventGroupClearBits(network_event_group, IPV4_GOTIP_BIT);
     break;
   case SYSTEM_EVENT_ETH_START:
+    tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_ETH, "Modul_Hatox");
     ESP_LOGI(TAG, "Ethernet Started");
     break;
   case SYSTEM_EVENT_ETH_GOT_IP:
@@ -100,7 +101,6 @@ void ros_tcp_init()
   nvs_flash_init();
 
   network_event_group = xEventGroupCreate();
-
   tcpip_adapter_init();
   ESP_ERROR_CHECK(esp_event_loop_init(network_event_handler, NULL));
 
@@ -110,7 +110,6 @@ void ros_tcp_init()
   config.gpio_config = eth_gpio_config_rmii;
   config.tcpip_input = tcpip_adapter_eth_input;
   config.clock_mode = 3;
-
   ESP_ERROR_CHECK(esp_eth_init(&config));
   ESP_ERROR_CHECK(esp_eth_enable());
 #endif
