@@ -38,27 +38,29 @@
 #include "std_srvs/SetBool.h"
 #include "drz_mod_bus_msgs/ModuleMsg.h"
 //#include "ros_custom_messages/modul_info.h"
+#include "modul_identification/modul_identification_msg.h"
 
 extern "C"
 {
 #include "Hatox.h"
 }
 
-ros::NodeHandle nh; /** Rosserial nodehandle */
-
+ros::NodeHandle nh;     /** Rosserial nodehandle */
+bool sendIdent = false; /** ModulIdentMsg has been send */
 /*Messages*/
-std_msgs::UInt8MultiArray hatoxDataMsg;    /** Rosmessage for hatox data */
 geometry_msgs::Twist hatoxVelMsg;          /** Rosmessage for twist data */
 std_msgs::Bool hatoxEnableMsg;             /** Rosmessage for MxVk LOS Module data */
 std_msgs::Bool mtd4ShutdownMsg;            /** Rosmessage for Shutdown data */
 drz_mod_bus_msgs::ModuleMsg modbEnableMsg; /** Rosmessage for Enable */
+modul_identification::modul_identification_msg modulIdentMsg;
 
 /*Publisher*/
-ros::Publisher hatoxDataPub("hatox_data", &hatoxDataMsg);     /** Rosserial publisher for topic "/hatox_data" */
-ros::Publisher hatoxVelPub("cmd_vel", &hatoxVelMsg);          /** Rosserial publisher for topic "/cmd_vel" */
-ros::Publisher hatoxEnablePub("enable", &hatoxEnableMsg);     /** Rosserial publisher for topic "/enable" */
-ros::Publisher mtd4ShutdownPub("shutdown", &mtd4ShutdownMsg); /** Rosserial publisher for topic "/shutdown" */
-ros::Publisher modbEnablePub("drz_mod_bus", &modbEnableMsg);  /** Rosserial publisher for topic "/drz_mod_bus" */
+ros::Publisher modulIdentPub("modulIdent", &modulIdentMsg);
+//asd = new ros::Publisher("hatox_data", &hatoxDataMsg);
+ros::Publisher *hatoxVelPub = nullptr;     /** Rosserial publisher for topic "/cmd_vel" */
+ros::Publisher *hatoxEnablePub = nullptr;  /** Rosserial publisher for topic "/enable" */
+ros::Publisher *mtd4ShutdownPub = nullptr; /** Rosserial publisher for topic "/shutdown" */
+ros::Publisher *modbEnablePub = nullptr;   /** Rosserial publisher for topic "/drz_mod_bus" */
 //ros::Publisher mtd4TestPub("modul_info", &mtd4TestMsg);         /** Rosserial publisher for topic "/shutdown" */
 
 /*Variables*/
@@ -100,6 +102,37 @@ void sub_status_cb(const std_msgs::Byte &status_msg)
 /*Subscriber*/
 ros::Subscriber<std_msgs::Byte> sub("ctrl_status", sub_status_cb); /*Subscriber for Robot Status Message: /ctrl_status*/
 
+void subModulIdentCb(const modul_identification::modul_identification_msg &msg)
+{
+  if (msg.slot_id != 255 && msg.modul_id == 0xDEADAFFE)
+  {
+    char topic[20];
+    strcpy(topic, msg.robot_name);
+    strcat(topic, "/cmd_vel");
+    hatoxVelPub = new ros::Publisher(topic, &hatoxVelMsg); /** Rosserial publisher for topic "/cmd_vel" */
+    char topic1[20];
+    strcpy(topic1, msg.robot_name);
+    strcat(topic1, "/enable");
+    hatoxEnablePub = new ros::Publisher(topic1, &hatoxEnableMsg); /** Rosserial publisher for topic "/enable" */
+    char topic2[20];
+    strcpy(topic2, ""); //strcpy(topic2, msg.robot_name);
+    strcat(topic2, "/shutdown");
+    mtd4ShutdownPub = new ros::Publisher(topic2, &mtd4ShutdownMsg); /** Rosserial publisher for topic "/shutdown" */
+    char topic3[20];
+    strcpy(topic3, msg.robot_name);
+    strcat(topic3, "/drz_mod_bus");
+    modbEnablePub = new ros::Publisher(topic3, &modbEnableMsg); /** Rosserial publisher for topic "/drz_mod_bus" */
+
+    nh.advertise(*hatoxVelPub);
+    nh.advertise(*hatoxEnablePub);
+    nh.advertise(*mtd4ShutdownPub);
+    nh.advertise(*modbEnablePub);
+    nh.negotiateTopics();
+  }
+}
+
+ros::Subscriber<modul_identification::modul_identification_msg> modulIdentSub("modulIdent", subModulIdentCb);
+
 /*User Functions*/
 
 /* Handle Buttons*/
@@ -126,48 +159,64 @@ void handleButtons()
   //Enable Motors (Button 1)
   if (getButtonStatus() & HATOX_BTN_1 && hatoxButtonsReleased == true)
   {
-    hatoxEnableMsg.data = true;
-    hatoxEnablePub.publish(&hatoxEnableMsg);
-    hatoxButtonsReleased = false;
+    if (hatoxEnablePub != nullptr)
+    {
+      hatoxEnableMsg.data = true;
+      hatoxEnablePub->publish(&hatoxEnableMsg);
+      hatoxButtonsReleased = false;
+    }
   }
 
   //Enable Motors (Button 3)
   if (getButtonStatus() & HATOX_BTN_3 && hatoxButtonsReleased == true)
   {
-    modbEnableMsg.from = "HAN";
-    modbEnableMsg.to = "MOB";
-    modbEnableMsg.command = "engine";
-    modbEnableMsg.i1 = 1;
-    modbEnablePub.publish(&modbEnableMsg);
-    hatoxButtonsReleased = false;
+    if (modbEnablePub != nullptr)
+    {
+      modbEnableMsg.from = "HAN";
+      modbEnableMsg.to = "MOB";
+      modbEnableMsg.command = "engine";
+      modbEnableMsg.i1 = 1;
+      modbEnablePub->publish(&modbEnableMsg);
+      hatoxButtonsReleased = false;
+    }
   }
 
   //Disable Motors (Button 2)
   if (getButtonStatus() & HATOX_BTN_2 && hatoxButtonsReleased == true)
   {
-    speedLevel = 1;
-    hatoxEnableMsg.data = false;
-    hatoxEnablePub.publish(&hatoxEnableMsg);
-    hatoxButtonsReleased = false;
+    if (hatoxEnablePub != nullptr)
+    {
+      speedLevel = 1;
+      hatoxEnableMsg.data = false;
+      hatoxEnablePub->publish(&hatoxEnableMsg);
+      hatoxButtonsReleased = false;
+    }
   }
 
   //Disable Motors (Button 4)
   if (getButtonStatus() & HATOX_BTN_4 && hatoxButtonsReleased == true)
   {
-    modbEnableMsg.from = "HAN";
-    modbEnableMsg.to = "MOB";
-    modbEnableMsg.command = "engine";
-    modbEnableMsg.i1 = 0;
-    modbEnablePub.publish(&modbEnableMsg);
-    hatoxButtonsReleased = false;
+    if (modbEnablePub != nullptr)
+    {
+      modbEnableMsg.from = "HAN";
+      modbEnableMsg.to = "MOB";
+      modbEnableMsg.command = "engine";
+      modbEnableMsg.i1 = 0;
+      modbEnablePub->publish(&modbEnableMsg);
+      hatoxButtonsReleased = false;
+    }
   }
+
   //Shutdown MT-D4 (Button 6)
   if (getButtonStatus() & HATOX_BTN_6 && hatoxButtonsReleased == true)
   {
-    setText(3, 7, "SHDWN!", 6);
-    hatoxButtonsReleased = false;
-    mtd4ShutdownMsg.data = true;
-    mtd4ShutdownPub.publish(&mtd4ShutdownMsg);
+    if (mtd4ShutdownPub != nullptr)
+    {
+      setText(3, 7, "SHDWN!", 6);
+      hatoxButtonsReleased = false;
+      mtd4ShutdownMsg.data = true;
+      mtd4ShutdownPub->publish(&mtd4ShutdownMsg);
+    }
   }
   /*No Button Pressed*/
   if (getButtonStatus() == 128)
@@ -220,7 +269,10 @@ void handleSpeed()
   hatoxVelMsg.angular.y = 0;
   hatoxVelMsg.angular.z = (getRightStickX() - 127) / 127.0f * -angularVelocity;
 
-  hatoxVelPub.publish(&hatoxVelMsg);
+  if (hatoxVelPub != nullptr)
+  {
+    hatoxVelPub->publish(&hatoxVelMsg);
+  }
 }
 
 /*ROS Functions*/
@@ -230,35 +282,32 @@ void rosserialSetup()
   // Initialize ROS
   nh.initNode();
   //Advertise all topics
-  nh.advertise(hatoxDataPub);
-  nh.advertise(hatoxVelPub);
-  nh.advertise(hatoxEnablePub);
-  nh.advertise(mtd4ShutdownPub);
-  nh.advertise(modbEnablePub);
-  //nh.advertise(mtd4TestPub);
+
+  // nh.advertise(hatoxVelPub);
+  // nh.advertise(hatoxEnablePub);
+  // nh.advertise(mtd4ShutdownPub);
+  // nh.advertise(modbEnablePub);
+  nh.advertise(modulIdentPub);
+
   nh.subscribe(sub);
+  nh.subscribe(modulIdentSub);
 }
 
 void rosserialPublish()
 {
   if (nh.connected())
   {
-    //Hatox data [PDO1_0,PDO1_1,PDO1_2,PDO1_3,PDO1_4,PDO2_0,PDO2_1]
-    uint8_t data[] = {OD_statusRegister[ODA_statusRegister_analogDat0], OD_statusRegister[ODA_statusRegister_analogDat1], OD_statusRegister[ODA_statusRegister_analogDat2], OD_statusRegister[ODA_statusRegister_analogDat3], OD_statusRegister[ODA_statusRegister_analogDat4], OD_statusRegister[ODA_statusRegister_digitalDat0], OD_statusRegister[ODA_statusRegister_digitalDat1]};
-    hatoxDataMsg.data = data; /**  */
-    //Number of bytes in hatox data
-    hatoxDataMsg.data_length = 7; /**  */
-    hatoxDataPub.publish(&hatoxDataMsg);
+    if (sendIdent == false)
+    {
+      vTaskDelay(500 / portTICK_PERIOD_MS); //Delay is neccessary because first messages after advertisement of publisher may get lost
+      modulIdentMsg.power = 10;
+      modulIdentMsg.modul_id = 0xDEADAFFE;
+      modulIdentMsg.connectors_used = 1;
+      modulIdentMsg.slot_id = 255;
+      modulIdentPub.publish(&modulIdentMsg);
 
-    // mtd4TestMsg.id = 0xAF;
-    // mtd4TestMsg.ip[0] = 0xDE;
-    // mtd4TestMsg.ip[1] = 0xAD;
-    // mtd4TestMsg.ip[2] = 0xAF;
-    // mtd4TestMsg.ip[3] = 0xFE;
-    // mtd4TestMsg.name = "AFFE";
-    // mtd4TestMsg.power = 0xFE;
-
-    //mtd4TestPub.publish(&mtd4TestMsg);
+      sendIdent = true;
+    }
 
     handleButtons();
     handleSpeed();
