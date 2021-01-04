@@ -34,7 +34,9 @@
 #include "std_msgs/Bool.h"
 #include "std_msgs/Byte.h"
 #include "std_msgs/Int8.h"
+#include "std_msgs/Int32.h"
 #include "std_msgs/UInt8MultiArray.h"
+#include "std_msgs/Int32MultiArray.h"
 #include "std_srvs/SetBool.h"
 #include "drz_mod_bus_msgs/ModuleMsg.h"
 //#include "ros_custom_messages/modul_info.h"
@@ -49,15 +51,19 @@ ros::NodeHandle nh;     /** Rosserial nodehandle */
 bool sendIdent = false; /** ModulIdentMsg has been send */
 /*Messages*/
 geometry_msgs::Twist hatoxVelMsg;          /** Rosmessage for twist data */
+std_msgs::Int32MultiArray hatoxVelMsgPTU;  /** Rosmessage for PTU twist data */
 std_msgs::Bool hatoxEnableMsg;             /** Rosmessage for MxVk LOS Module data */
 std_msgs::Bool mtd4ShutdownMsg;            /** Rosmessage for Shutdown data */
 drz_mod_bus_msgs::ModuleMsg modbEnableMsg; /** Rosmessage for Enable */
 modul_identification::modul_identification_msg modulIdentMsg;
+std_msgs::Int32 losMsg; /** Rosmessage for Shutdown data */
 
 /*Publisher*/
 ros::Publisher modulIdentPub("modulIdent", &modulIdentMsg);
+ros::Publisher losPub("LOS/setValveStatus", &losMsg);
 //asd = new ros::Publisher("hatox_data", &hatoxDataMsg);
 ros::Publisher *hatoxVelPub = nullptr;     /** Rosserial publisher for topic "/cmd_vel" */
+ros::Publisher *hatoxVelPubPTU = nullptr;  /** Rosserial publisher for topic "/cmd_vel" */
 ros::Publisher *hatoxEnablePub = nullptr;  /** Rosserial publisher for topic "/enable" */
 ros::Publisher *mtd4ShutdownPub = nullptr; /** Rosserial publisher for topic "/shutdown" */
 ros::Publisher *modbEnablePub = nullptr;   /** Rosserial publisher for topic "/drz_mod_bus" */
@@ -68,6 +74,10 @@ uint8_t rob_status = 0;        /* Robot Status*/
 uint8_t last_rob_status = 254; /* Last used Robot Status*/
 uint8_t speedLevel = 1;        /* Robot Speed Multiplier*/
 uint8_t last_speedLevel = 0;   /* Last used Robot Speed Multiplier*/
+uint8_t mode = 0;              /* Control mode -> 0 = PTU  1 = Robot*/
+bool toggle = false;
+
+int32_t mxvk_data[] = {0, 0, 0, 0, 0};
 
 double linearVelocity = (MAX_LINEAR_VEL / MAX_SPEED_LEVEL) * speedLevel;
 double angularVelocity = (MAX_ANGULAR_VEL / MAX_SPEED_LEVEL) * speedLevel;
@@ -100,38 +110,7 @@ void sub_status_cb(const std_msgs::Byte &status_msg)
 }
 
 /*Subscriber*/
-ros::Subscriber<std_msgs::Byte> sub("ctrl_status", sub_status_cb); /*Subscriber for Robot Status Message: /ctrl_status*/
-
-void subModulIdentCb(const modul_identification::modul_identification_msg &msg)
-{
-  if (msg.slot_id != 255 && msg.modul_id == 0xDEADAFFE)
-  {
-    char topic[20];
-    strcpy(topic, msg.robot_name);
-    strcat(topic, "/cmd_vel");
-    hatoxVelPub = new ros::Publisher(topic, &hatoxVelMsg); /** Rosserial publisher for topic "/cmd_vel" */
-    char topic1[20];
-    strcpy(topic1, msg.robot_name);
-    strcat(topic1, "/enable");
-    hatoxEnablePub = new ros::Publisher(topic1, &hatoxEnableMsg); /** Rosserial publisher for topic "/enable" */
-    char topic2[20];
-    strcpy(topic2, ""); //strcpy(topic2, msg.robot_name);
-    strcat(topic2, "/shutdown");
-    mtd4ShutdownPub = new ros::Publisher(topic2, &mtd4ShutdownMsg); /** Rosserial publisher for topic "/shutdown" */
-    char topic3[20];
-    strcpy(topic3, msg.robot_name);
-    strcat(topic3, "/drz_mod_bus");
-    modbEnablePub = new ros::Publisher(topic3, &modbEnableMsg); /** Rosserial publisher for topic "/drz_mod_bus" */
-
-    nh.advertise(*hatoxVelPub);
-    nh.advertise(*hatoxEnablePub);
-    nh.advertise(*mtd4ShutdownPub);
-    nh.advertise(*modbEnablePub);
-    nh.negotiateTopics();
-  }
-}
-
-ros::Subscriber<modul_identification::modul_identification_msg> modulIdentSub("modulIdent", subModulIdentCb);
+ros::Subscriber<std_msgs::Byte> sub("/D4/drz_mob/status", sub_status_cb); /*Subscriber for Robot Status Message: /ctrl_status*/
 
 /*User Functions*/
 
@@ -159,17 +138,6 @@ void handleButtons()
   //Enable Motors (Button 1)
   if (getButtonStatus() & HATOX_BTN_1 && hatoxButtonsReleased == true)
   {
-    if (hatoxEnablePub != nullptr)
-    {
-      hatoxEnableMsg.data = true;
-      hatoxEnablePub->publish(&hatoxEnableMsg);
-      hatoxButtonsReleased = false;
-    }
-  }
-
-  //Enable Motors (Button 3)
-  if (getButtonStatus() & HATOX_BTN_3 && hatoxButtonsReleased == true)
-  {
     if (modbEnablePub != nullptr)
     {
       modbEnableMsg.from = "HAN";
@@ -178,23 +146,28 @@ void handleButtons()
       modbEnableMsg.i1 = 1;
       modbEnablePub->publish(&modbEnableMsg);
       hatoxButtonsReleased = false;
+      mode = 1;
     }
+    // if (hatoxEnablePub != nullptr)
+    // {
+    //   hatoxEnableMsg.data = true;
+    //   hatoxEnablePub->publish(&hatoxEnableMsg);
+    //   hatoxButtonsReleased = false;
+    //   mode = 1;
+    // }
+  }
+
+  //(Button 3)
+  if (getButtonStatus() & HATOX_BTN_3 && hatoxButtonsReleased == true)
+  {
+    //MINIMAX
+    losMsg.data = 0;
+    losPub.publish(&losMsg);
+    hatoxButtonsReleased = false;
   }
 
   //Disable Motors (Button 2)
   if (getButtonStatus() & HATOX_BTN_2 && hatoxButtonsReleased == true)
-  {
-    if (hatoxEnablePub != nullptr)
-    {
-      speedLevel = 1;
-      hatoxEnableMsg.data = false;
-      hatoxEnablePub->publish(&hatoxEnableMsg);
-      hatoxButtonsReleased = false;
-    }
-  }
-
-  //Disable Motors (Button 4)
-  if (getButtonStatus() & HATOX_BTN_4 && hatoxButtonsReleased == true)
   {
     if (modbEnablePub != nullptr)
     {
@@ -203,6 +176,56 @@ void handleButtons()
       modbEnableMsg.command = "engine";
       modbEnableMsg.i1 = 0;
       modbEnablePub->publish(&modbEnableMsg);
+      hatoxButtonsReleased = false;
+      mode = 0;
+    }
+    // if (hatoxEnablePub != nullptr)
+    // {
+    //   speedLevel = 1;
+    //   hatoxEnableMsg.data = false;
+    //   hatoxEnablePub->publish(&hatoxEnableMsg);
+    //   hatoxButtonsReleased = false;
+    //   mode = 0;
+    // }
+  }
+
+  // (Button 4)
+  if (getButtonStatus() & HATOX_BTN_4 && hatoxButtonsReleased == true)
+  {
+    //MINIMAX
+    losMsg.data = 2;
+    losPub.publish(&losMsg);
+    hatoxButtonsReleased = false;
+  }
+
+  //Toggle Monitor Motor(Button 5)
+  if (getButtonStatus() & HATOX_BTN_5 && hatoxButtonsReleased == true)
+  {
+    if (hatoxVelPubPTU != nullptr)
+    {
+      mxvk_data[0] = 101;
+      if (toggle)
+      {
+        mxvk_data[1] = 1;
+      }
+      else
+      {
+        mxvk_data[1] = 0;
+      }
+
+      mxvk_data[2] = 42;
+      mxvk_data[3] = 42;
+      mxvk_data[4] = 40;
+
+      hatoxVelMsgPTU.data = mxvk_data;
+      hatoxVelMsgPTU.data_length = 5;
+      for (uint8_t i = 0; i < 10; i++)
+      {
+        hatoxVelPubPTU->publish(&hatoxVelMsgPTU);
+      }
+
+      //hatoxVelPubPTU->publish(&hatoxVelMsgPTU);
+      toggle = !toggle;
       hatoxButtonsReleased = false;
     }
   }
@@ -266,9 +289,40 @@ void handleSpeed()
   hatoxVelMsg.linear.y = (getLeftStickX() - 127) / 127.0f * linearVelocity;
   hatoxVelMsg.linear.z = 0;
   hatoxVelMsg.angular.x = 0;
-  hatoxVelMsg.angular.y = 0;
+  hatoxVelMsg.angular.y = (getRightStickY() - 127) / 127.0f * -angularVelocity;
   hatoxVelMsg.angular.z = (getRightStickX() - 127) / 127.0f * -angularVelocity;
 
+  mxvk_data[0] = -(getLeftStickX() - 127) / 127.0f * 100;
+  mxvk_data[1] = -(getRightStickY() - 127) / 127.0f * 100;
+  mxvk_data[2] = 4;
+  mxvk_data[3] = 42;
+  mxvk_data[4] = 40;
+
+  if (mode == 1)
+  {
+    //Set values in twist message based on hatox data
+    mxvk_data[0] = 0;
+    mxvk_data[1] = 0;
+    mxvk_data[2] = 4;
+    mxvk_data[3] = 42;
+    mxvk_data[4] = 40;
+  }
+  if (mode == 0)
+  {
+    //Set values in twist message based on hatox data
+    hatoxVelMsg.linear.x = 0;
+    hatoxVelMsg.linear.y = 0;
+    hatoxVelMsg.linear.z = 0;
+    hatoxVelMsg.angular.x = 0;
+    hatoxVelMsg.angular.y = 0;
+    hatoxVelMsg.angular.z = 0;
+  }
+  if (hatoxVelPubPTU != nullptr)
+  {
+    hatoxVelMsgPTU.data = mxvk_data;
+    hatoxVelMsgPTU.data_length = 5;
+    hatoxVelPubPTU->publish(&hatoxVelMsgPTU);
+  }
   if (hatoxVelPub != nullptr)
   {
     hatoxVelPub->publish(&hatoxVelMsg);
@@ -282,15 +336,23 @@ void rosserialSetup()
   // Initialize ROS
   nh.initNode();
   //Advertise all topics
+  hatoxVelPub = new ros::Publisher("drz_han/cmd_vel", &hatoxVelMsg);            /** Rosserial publisher for topic "/cmd_vel" */
+  hatoxVelPubPTU = new ros::Publisher("controller/universal", &hatoxVelMsgPTU); /** Rosserial publisher for topic "/cmd_vel" */
+  hatoxEnablePub = new ros::Publisher("enable", &hatoxEnableMsg);               /** Rosserial publisher for topic "/enable" */
+  mtd4ShutdownPub = new ros::Publisher("shutdown", &mtd4ShutdownMsg);           /** Rosserial publisher for topic "/shutdown" */
+  modbEnablePub = new ros::Publisher("drz_mod_bus", &modbEnableMsg);            /** Rosserial publisher for topic "/drz_mod_bus" */
 
-  // nh.advertise(hatoxVelPub);
-  // nh.advertise(hatoxEnablePub);
-  // nh.advertise(mtd4ShutdownPub);
-  // nh.advertise(modbEnablePub);
+  nh.advertise(*hatoxVelPub);
+  nh.advertise(*hatoxVelPubPTU);
+  nh.advertise(*hatoxEnablePub);
+  nh.advertise(*mtd4ShutdownPub);
+  nh.advertise(*modbEnablePub);
+  nh.advertise(losPub);
+  //nh.negotiateTopics();
+
   nh.advertise(modulIdentPub);
 
   nh.subscribe(sub);
-  nh.subscribe(modulIdentSub);
 }
 
 void rosserialPublish()
@@ -301,9 +363,9 @@ void rosserialPublish()
     {
       vTaskDelay(500 / portTICK_PERIOD_MS); //Delay is neccessary because first messages after advertisement of publisher may get lost
       modulIdentMsg.power = 10;
-      modulIdentMsg.modul_id = 0xDEADAFFE;
+      modulIdentMsg.modul_id = "5E00011225AB9801";
+      modulIdentMsg.modul_name = "drz_han";
       modulIdentMsg.connectors_used = 1;
-      modulIdentMsg.slot_id = 255;
       modulIdentPub.publish(&modulIdentMsg);
 
       sendIdent = true;

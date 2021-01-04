@@ -7,6 +7,7 @@ extern "C"
 #include "esp_err.h"
 #include "esp_timer.h"
 #include <driver/uart.h>
+#include <lwip/inet.h>
 
 #include <tcpip_adapter.h>
 #include "esp_log.h"
@@ -37,8 +38,10 @@ public:
 #if defined(CONFIG_ROSSERIAL_OVER_WIFI)
     ESP_ERROR_CHECK(tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ipInfo));
 #endif
-    ESP_LOGI("TEST: ", "USING: %d", (uint8_t)ipInfo.ip.addr);
-    ros_tcp_connect(ROS_SERVER_IP, ROS_SERVER_PORT);
+    ESP_LOGI("TEST: ", "%s", inet_ntoa(ipInfo.ip.addr));
+    uint32_t rosserver = (ipInfo.ip.addr & (0x00FFFFFF)) + (200 << 24);
+    ESP_LOGI("TEST: ", "%s", inet_ntoa(rosserver));
+    ros_tcp_connect(inet_ntoa(rosserver), ROS_SERVER_PORT);
 #else
     uart_driver_install(UART_PORT, 1024, 1024, 0, NULL, 0);
 #endif

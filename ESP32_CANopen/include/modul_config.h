@@ -46,7 +46,7 @@
 #define CONFIG_ROSSERIAL_OVER_ETH /** Use Ethernet instead of Serial */
 //#define CONFIG_ROSSERIAL_OVER_WIFI    /** Use WIFI instead of Serial */
 
-#define ROS_SERVER_IP "192.168.10.1" /** Rosserial server ip */
+#define ROS_SERVER_IP "192.168.10.200" /** Rosserial server ip */
 //#define ROS_SERVER_IP "10.0.101.194" /** Rosserial server ip (DEV!) */
 #define ROS_SERVER_PORT 11411 /** Rosserial server port */
 

@@ -15,20 +15,12 @@ namespace modul_identification
     public:
       typedef std_msgs::Header _header_type;
       _header_type header;
-      typedef uint32_t _modul_id_type;
+      typedef const char* _modul_id_type;
       _modul_id_type modul_id;
-      typedef const char* _robot_name_type;
-      _robot_name_type robot_name;
-      typedef uint8_t _slot_id_type;
-      _slot_id_type slot_id;
+      typedef const char* _modul_name_type;
+      _modul_name_type modul_name;
       typedef uint8_t _power_type;
       _power_type power;
-      typedef float _offset_x_type;
-      _offset_x_type offset_x;
-      typedef float _offset_y_type;
-      _offset_y_type offset_y;
-      typedef float _offset_z_type;
-      _offset_z_type offset_z;
       typedef uint8_t _modul_size_type;
       _modul_size_type modul_size;
       typedef uint8_t _connectors_used_type;
@@ -36,13 +28,9 @@ namespace modul_identification
 
     modul_identification_msg():
       header(),
-      modul_id(0),
-      robot_name(""),
-      slot_id(0),
+      modul_id(""),
+      modul_name(""),
       power(0),
-      offset_x(0),
-      offset_y(0),
-      offset_z(0),
       modul_size(0),
       connectors_used(0)
     {
@@ -52,50 +40,18 @@ namespace modul_identification
     {
       int offset = 0;
       offset += this->header.serialize(outbuffer + offset);
-      *(outbuffer + offset + 0) = (this->modul_id >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (this->modul_id >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (this->modul_id >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (this->modul_id >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->modul_id);
-      uint32_t length_robot_name = strlen(this->robot_name);
-      varToArr(outbuffer + offset, length_robot_name);
+      uint32_t length_modul_id = strlen(this->modul_id);
+      varToArr(outbuffer + offset, length_modul_id);
       offset += 4;
-      memcpy(outbuffer + offset, this->robot_name, length_robot_name);
-      offset += length_robot_name;
-      *(outbuffer + offset + 0) = (this->slot_id >> (8 * 0)) & 0xFF;
-      offset += sizeof(this->slot_id);
+      memcpy(outbuffer + offset, this->modul_id, length_modul_id);
+      offset += length_modul_id;
+      uint32_t length_modul_name = strlen(this->modul_name);
+      varToArr(outbuffer + offset, length_modul_name);
+      offset += 4;
+      memcpy(outbuffer + offset, this->modul_name, length_modul_name);
+      offset += length_modul_name;
       *(outbuffer + offset + 0) = (this->power >> (8 * 0)) & 0xFF;
       offset += sizeof(this->power);
-      union {
-        float real;
-        uint32_t base;
-      } u_offset_x;
-      u_offset_x.real = this->offset_x;
-      *(outbuffer + offset + 0) = (u_offset_x.base >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (u_offset_x.base >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (u_offset_x.base >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (u_offset_x.base >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->offset_x);
-      union {
-        float real;
-        uint32_t base;
-      } u_offset_y;
-      u_offset_y.real = this->offset_y;
-      *(outbuffer + offset + 0) = (u_offset_y.base >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (u_offset_y.base >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (u_offset_y.base >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (u_offset_y.base >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->offset_y);
-      union {
-        float real;
-        uint32_t base;
-      } u_offset_z;
-      u_offset_z.real = this->offset_z;
-      *(outbuffer + offset + 0) = (u_offset_z.base >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (u_offset_z.base >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (u_offset_z.base >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (u_offset_z.base >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->offset_z);
       *(outbuffer + offset + 0) = (this->modul_size >> (8 * 0)) & 0xFF;
       offset += sizeof(this->modul_size);
       *(outbuffer + offset + 0) = (this->connectors_used >> (8 * 0)) & 0xFF;
@@ -107,57 +63,26 @@ namespace modul_identification
     {
       int offset = 0;
       offset += this->header.deserialize(inbuffer + offset);
-      this->modul_id =  ((uint32_t) (*(inbuffer + offset)));
-      this->modul_id |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
-      this->modul_id |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
-      this->modul_id |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
-      offset += sizeof(this->modul_id);
-      uint32_t length_robot_name;
-      arrToVar(length_robot_name, (inbuffer + offset));
+      uint32_t length_modul_id;
+      arrToVar(length_modul_id, (inbuffer + offset));
       offset += 4;
-      for(unsigned int k= offset; k< offset+length_robot_name; ++k){
+      for(unsigned int k= offset; k< offset+length_modul_id; ++k){
           inbuffer[k-1]=inbuffer[k];
       }
-      inbuffer[offset+length_robot_name-1]=0;
-      this->robot_name = (char *)(inbuffer + offset-1);
-      offset += length_robot_name;
-      this->slot_id =  ((uint8_t) (*(inbuffer + offset)));
-      offset += sizeof(this->slot_id);
+      inbuffer[offset+length_modul_id-1]=0;
+      this->modul_id = (char *)(inbuffer + offset-1);
+      offset += length_modul_id;
+      uint32_t length_modul_name;
+      arrToVar(length_modul_name, (inbuffer + offset));
+      offset += 4;
+      for(unsigned int k= offset; k< offset+length_modul_name; ++k){
+          inbuffer[k-1]=inbuffer[k];
+      }
+      inbuffer[offset+length_modul_name-1]=0;
+      this->modul_name = (char *)(inbuffer + offset-1);
+      offset += length_modul_name;
       this->power =  ((uint8_t) (*(inbuffer + offset)));
       offset += sizeof(this->power);
-      union {
-        float real;
-        uint32_t base;
-      } u_offset_x;
-      u_offset_x.base = 0;
-      u_offset_x.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      u_offset_x.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
-      u_offset_x.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
-      u_offset_x.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
-      this->offset_x = u_offset_x.real;
-      offset += sizeof(this->offset_x);
-      union {
-        float real;
-        uint32_t base;
-      } u_offset_y;
-      u_offset_y.base = 0;
-      u_offset_y.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      u_offset_y.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
-      u_offset_y.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
-      u_offset_y.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
-      this->offset_y = u_offset_y.real;
-      offset += sizeof(this->offset_y);
-      union {
-        float real;
-        uint32_t base;
-      } u_offset_z;
-      u_offset_z.base = 0;
-      u_offset_z.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      u_offset_z.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
-      u_offset_z.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
-      u_offset_z.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
-      this->offset_z = u_offset_z.real;
-      offset += sizeof(this->offset_z);
       this->modul_size =  ((uint8_t) (*(inbuffer + offset)));
       offset += sizeof(this->modul_size);
       this->connectors_used =  ((uint8_t) (*(inbuffer + offset)));
@@ -166,7 +91,7 @@ namespace modul_identification
     }
 
     const char * getType(){ return "modul_identification/modul_identification_msg"; };
-    const char * getMD5(){ return "b750818e6b2147b38247972f8f0f93ce"; };
+    const char * getMD5(){ return "9c711196583e3a60f6fef49c1390d591"; };
 
   };
 
