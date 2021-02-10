@@ -74,7 +74,6 @@ uint8_t rob_status = 0;        /* Robot Status*/
 uint8_t last_rob_status = 254; /* Last used Robot Status*/
 uint8_t speedLevel = 1;        /* Robot Speed Multiplier*/
 uint8_t last_speedLevel = 0;   /* Last used Robot Speed Multiplier*/
-uint8_t mode = 0;              /* Control mode -> 0 = PTU  1 = Robot*/
 bool toggle = false;
 
 int32_t mxvk_data[] = {0, 0, 0, 0, 0};
@@ -82,6 +81,8 @@ int32_t mxvk_data[] = {0, 0, 0, 0, 0};
 double linearVelocity = (MAX_LINEAR_VEL / MAX_SPEED_LEVEL) * speedLevel;
 double angularVelocity = (MAX_ANGULAR_VEL / MAX_SPEED_LEVEL) * speedLevel;
 bool hatoxButtonsReleased = true;
+uint32_t pressDuration = 0; //Amount of time in microseconds since last buttonpress
+uint8_t lastPressed = 127;  //Last pressed button (127 if no button pressed)
 
 /*Callbacks*/
 
@@ -146,23 +147,14 @@ void handleButtons()
       modbEnableMsg.i1 = 1;
       modbEnablePub->publish(&modbEnableMsg);
       hatoxButtonsReleased = false;
-      mode = 1;
     }
-    // if (hatoxEnablePub != nullptr)
-    // {
-    //   hatoxEnableMsg.data = true;
-    //   hatoxEnablePub->publish(&hatoxEnableMsg);
-    //   hatoxButtonsReleased = false;
-    //   mode = 1;
-    // }
   }
 
   //(Button 3)
   if (getButtonStatus() & HATOX_BTN_3 && hatoxButtonsReleased == true)
   {
-    //MINIMAX
-    losMsg.data = 0;
-    losPub.publish(&losMsg);
+    pressDuration = esp_timer_get_time();
+    lastPressed = 3;
     hatoxButtonsReleased = false;
   }
 
@@ -177,24 +169,14 @@ void handleButtons()
       modbEnableMsg.i1 = 0;
       modbEnablePub->publish(&modbEnableMsg);
       hatoxButtonsReleased = false;
-      mode = 0;
     }
-    // if (hatoxEnablePub != nullptr)
-    // {
-    //   speedLevel = 1;
-    //   hatoxEnableMsg.data = false;
-    //   hatoxEnablePub->publish(&hatoxEnableMsg);
-    //   hatoxButtonsReleased = false;
-    //   mode = 0;
-    // }
   }
 
   // (Button 4)
   if (getButtonStatus() & HATOX_BTN_4 && hatoxButtonsReleased == true)
   {
-    //MINIMAX
-    losMsg.data = 2;
-    losPub.publish(&losMsg);
+    pressDuration = esp_timer_get_time();
+    lastPressed = 4;
     hatoxButtonsReleased = false;
   }
 
@@ -242,9 +224,58 @@ void handleButtons()
     }
   }
   /*No Button Pressed*/
-  if (getButtonStatus() == 128)
+  if (getButtonStatus() == 128 && hatoxButtonsReleased == false)
   {
     hatoxButtonsReleased = true;
+    pressDuration = esp_timer_get_time() - pressDuration;
+    bool longpress = false;
+
+    if (pressDuration > 2000000)
+    {
+      longpress = true;
+    }
+    else
+    {
+      longpress = false;
+    }
+
+    switch (lastPressed)
+    {
+    case 3:
+      if (!longpress)
+      {
+        //MINIMAX Druckventil 1 öffnen/schließen
+        losMsg.data = 0;
+        losPub.publish(&losMsg);
+      }
+      else
+      {
+        //MINIMAX Löschmittelventil 1 öffnen/schließen
+        losMsg.data = 2;
+        losPub.publish(&losMsg);
+      }
+      break;
+    case 4:
+      if (!longpress)
+      {
+        //MINIMAX Druckventil 2 öffnen/schließen
+        losMsg.data = 1;
+        losPub.publish(&losMsg);
+      }
+      else
+      {
+        //MINIMAX Löschmittelventil 2 öffnen/schließen
+        losMsg.data = 3;
+        losPub.publish(&losMsg);
+      }
+      break;
+
+    default:
+      break;
+    }
+
+    lastPressed = 127;
+    pressDuration = 0;
   }
 }
 
@@ -286,37 +317,18 @@ void handleSpeed()
     hatoxVelMsg.linear.x = MAX_LINEAR_VEL_REVERSE;
   }
 
-  hatoxVelMsg.linear.y = (getLeftStickX() - 127) / 127.0f * linearVelocity;
+  hatoxVelMsg.linear.y = 0; //(getLeftStickX() - 127) / 127.0f * linearVelocity;
   hatoxVelMsg.linear.z = 0;
   hatoxVelMsg.angular.x = 0;
-  hatoxVelMsg.angular.y = (getRightStickY() - 127) / 127.0f * -angularVelocity;
-  hatoxVelMsg.angular.z = (getRightStickX() - 127) / 127.0f * -angularVelocity;
+  hatoxVelMsg.angular.y = 0; //(getRightStickY() - 127) / 127.0f * -angularVelocity;
+  hatoxVelMsg.angular.z = (getLeftStickX() - 127) / 127.0f * -angularVelocity;
 
-  mxvk_data[0] = -(getLeftStickX() - 127) / 127.0f * 100;
+  mxvk_data[0] = -(getRightStickX() - 127) / 127.0f * 100;
   mxvk_data[1] = -(getRightStickY() - 127) / 127.0f * 100;
   mxvk_data[2] = 4;
   mxvk_data[3] = 42;
   mxvk_data[4] = 40;
 
-  if (mode == 1)
-  {
-    //Set values in twist message based on hatox data
-    mxvk_data[0] = 0;
-    mxvk_data[1] = 0;
-    mxvk_data[2] = 4;
-    mxvk_data[3] = 42;
-    mxvk_data[4] = 40;
-  }
-  if (mode == 0)
-  {
-    //Set values in twist message based on hatox data
-    hatoxVelMsg.linear.x = 0;
-    hatoxVelMsg.linear.y = 0;
-    hatoxVelMsg.linear.z = 0;
-    hatoxVelMsg.angular.x = 0;
-    hatoxVelMsg.angular.y = 0;
-    hatoxVelMsg.angular.z = 0;
-  }
   if (hatoxVelPubPTU != nullptr)
   {
     hatoxVelMsgPTU.data = mxvk_data;
