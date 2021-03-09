@@ -92,21 +92,25 @@ void sub_status_cb(const std_msgs::Byte &status_msg)
   rob_status = status_msg.data;
   if (last_rob_status != rob_status)
   {
-    if (rob_status == 0)
+    switch (rob_status)
     {
+    case 0: //IDLE
       setText(3, 7, "Idle..", 6);
-      last_rob_status = rob_status;
-    }
-    if (rob_status == 1)
-    {
+      break;
+    case 1: //ESTOP
       setText(3, 7, "E-Stop", 6);
-      last_rob_status = rob_status;
-    }
-    if (rob_status == 2)
-    {
+      break;
+    case 2: //TWIST
       setText(3, 7, "Twist ", 6);
-      last_rob_status = rob_status;
+      break;
+    case 3: //AUTO
+      setText(3, 7, "AUTO ", 6);
+      break;
+    default: //UNKNOWN
+      setText(3, 7, "??????", 6);
+      break;
     }
+    last_rob_status = rob_status;
   }
 }
 
@@ -144,7 +148,35 @@ void handleButtons()
       modBusMsg.from = "HAN";
       modBusMsg.to = "MOB";
       modBusMsg.command = "engine";
-      modBusMsg.i1 = 1;
+      if (rob_status == 0) //ROBOT IS IDLE
+      {
+        modBusMsg.i1 = 1; //ENABLE TWIST
+      }
+      else // if (rob_status == 2) //ROBOT IS IN TWIST
+      {
+        modBusMsg.i1 = 0; //DISABLE
+      }
+      modBusPub->publish(&modBusMsg);
+      hatoxButtonsReleased = false;
+    }
+  }
+
+  //Toggle AUTO-Mode (Button 2)
+  if (getButtonStatus() & HATOX_BTN_2 && hatoxButtonsReleased == true)
+  {
+    if (modBusPub != nullptr)
+    {
+      modBusMsg.from = "HAN";
+      modBusMsg.to = "MOB";
+      modBusMsg.command = "engine";
+      if (rob_status == 0) //ROBOT IS IDLE
+      {
+        modBusMsg.i1 = 2; //ENABLE AUTO
+      }
+      else // if (rob_status == 2) //ROBOT IS IN AUTO
+      {
+        modBusMsg.i1 = 0; //DISABLE
+      }
       modBusPub->publish(&modBusMsg);
       hatoxButtonsReleased = false;
     }
@@ -156,20 +188,6 @@ void handleButtons()
     pressDuration = esp_timer_get_time();
     lastPressed = 3;
     hatoxButtonsReleased = false;
-  }
-
-  //Disable Motors (Button 2)
-  if (getButtonStatus() & HATOX_BTN_2 && hatoxButtonsReleased == true)
-  {
-    if (modBusPub != nullptr)
-    {
-      modBusMsg.from = "HAN";
-      modBusMsg.to = "MOB";
-      modBusMsg.command = "engine";
-      modBusMsg.i1 = 0;
-      modBusPub->publish(&modBusMsg);
-      hatoxButtonsReleased = false;
-    }
   }
 
   // (Button 4)
@@ -310,7 +328,7 @@ void handleSpeed()
     hatoxVelMsgPTU.angular.y = -(getRightStickY() - 127) / 127.0f * 100;
     hatoxVelPubPTU->publish(&hatoxVelMsgPTU);
   }
-  if (hatoxVelPub != nullptr)
+  if (hatoxVelPub != nullptr && rob_status == 2) //Publish in TWIST Mode only
   {
     hatoxVelPub->publish(&hatoxVelMsg);
   }
