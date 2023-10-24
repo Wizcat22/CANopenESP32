@@ -1,0 +1,21 @@
+{
+    "project_name":       "bootloader",
+    "project_path":       "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/bootloader/subproject",
+    "build_dir":          "/home/valerij/Workspace/Work/Git/CANopenESP32/ESP32_CANopen/build/bootloader",
+    "config_file":        "/home/valerij/Workspace/Work/Git/CANopenESP32/ESP32_CANopen/sdkconfig",
+    "config_defaults":    "",
+    "app_elf":            "bootloader.elf",
+    "app_bin":            "bootloader.bin",
+    "git_revision":       "v4.4",
+    "target":             "esp32",
+    "rev":                "0",
+    "phy_data_partition": "",
+    "monitor_baud" :      "115200",
+    "monitor_toolprefix": "xtensa-esp32-elf-",
+    "config_environment" : {
+        "COMPONENT_KCONFIGS" : "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/efuse/Kconfig;/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/esp32/Kconfig;/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/esp_common/Kconfig;/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/esp_hw_support/Kconfig;/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/esp_system/Kconfig;/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/freertos/Kconfig;/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/hal/Kconfig;/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/log/Kconfig;/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/newlib/Kconfig;/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/spi_flash/Kconfig",
+        "COMPONENT_KCONFIGS_PROJBUILD" : "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/bootloader/Kconfig.projbuild;/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/esp_rom/Kconfig.projbuild;/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/esptool_py/Kconfig.projbuild;/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/partition_table/Kconfig.projbuild"
+    },
+    "build_components" : [ "bootloader", "bootloader_support", "efuse", "esp32", "esp_common", "esp_hw_support", "esp_rom", "esp_system", "esptool_py", "freertos", "hal", "log", "main", "micro-ecc", "newlib", "partition_table", "soc", "spi_flash", "xtensa", "" ],
+    "build_component_paths" : [ "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/bootloader", "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/bootloader_support", "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/efuse", "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/esp32", "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/esp_common", "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/esp_hw_support", "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/esp_rom", "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/esp_system", "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/esptool_py", "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/freertos", "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/hal", "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/log", "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/bootloader/subproject/main", "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/bootloader/subproject/components/micro-ecc", "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/newlib", "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/partition_table", "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/soc", "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/spi_flash", "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/xtensa", "" ]
+}

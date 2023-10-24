@@ -1,0 +1,6 @@
+source "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/app_update/Kconfig.projbuild"
+source "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/bootloader/Kconfig.projbuild"
+source "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/esp_rom/Kconfig.projbuild"
+source "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/esptool_py/Kconfig.projbuild"
+source "/home/valerij/Workspace/Work/Workspaces/esp/esp-idf/components/partition_table/Kconfig.projbuild"
+source "/home/valerij/Workspace/Work/Git/CANopenESP32/ESP32_CANopen/components/micro_ros_espidf_component/Kconfig.projbuild"

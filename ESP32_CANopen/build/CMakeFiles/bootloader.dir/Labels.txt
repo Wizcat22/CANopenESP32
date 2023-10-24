@@ -1,0 +1,13 @@
+# Target labels
+ bootloader
+# Source files and their labels
+/home/valerij/Workspace/Work/Git/CANopenESP32/ESP32_CANopen/build/CMakeFiles/bootloader
+/home/valerij/Workspace/Work/Git/CANopenESP32/ESP32_CANopen/build/CMakeFiles/bootloader.rule
+/home/valerij/Workspace/Work/Git/CANopenESP32/ESP32_CANopen/build/CMakeFiles/bootloader-complete.rule
+/home/valerij/Workspace/Work/Git/CANopenESP32/ESP32_CANopen/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
+/home/valerij/Workspace/Work/Git/CANopenESP32/ESP32_CANopen/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
+/home/valerij/Workspace/Work/Git/CANopenESP32/ESP32_CANopen/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
+/home/valerij/Workspace/Work/Git/CANopenESP32/ESP32_CANopen/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
+/home/valerij/Workspace/Work/Git/CANopenESP32/ESP32_CANopen/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
+/home/valerij/Workspace/Work/Git/CANopenESP32/ESP32_CANopen/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
+/home/valerij/Workspace/Work/Git/CANopenESP32/ESP32_CANopen/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule

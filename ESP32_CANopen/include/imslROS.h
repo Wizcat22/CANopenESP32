@@ -30,18 +30,13 @@ extern "C"
 #endif
 
   /**
-   * @brief Initialize Rosserial
+   * @brief Initialize Ros
    * 
    */
-  void rosserialSetup();
+  void rosInit(void *pvParameter);
 
-  /**
-   * @brief Publish all topics with Rosserial
-   * 
-   */
-  void rosserialPublish();
 
-  void NodeHandleSpin();
+  void connectWifi();
 
 #ifdef __cplusplus
 }
