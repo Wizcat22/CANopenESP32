@@ -52,6 +52,7 @@
 #include "soc/soc.h"
 #include "driver/can.h"
 #include "modul_config.h"
+#include "esp_log.h"
 
 // ros2
 #include <rcl/rcl.h>
@@ -137,10 +138,13 @@ void connectWifi()
 // Robot Status Callback
 void sub_status_cb(const void* status_msg)
 {
+    ESP_LOGI("HATOX", "subscriber start");
     std_msgs__msg__Byte *msg = (std_msgs__msg__Byte *)status_msg;
     rob_status = msg->data;
+    ESP_LOGI("HATOX", "subscriber --- bevor if");
     if (last_rob_status != rob_status)
     {
+        ESP_LOGI("HATOX", "subscriber --- in if");
         switch (rob_status)
         {
         case 0: // IDLE
@@ -377,6 +381,7 @@ void cmd_cb(rcl_timer_t * timer, int64_t last_call_time)
 {
     (void) last_call_time;
     if (timer != NULL) {
+        ESP_LOGI("CMD_CB", "IF");
       RCSOFTCHECK(rcl_publish(&hatoxVelPub, &hatoxVelMsg, NULL));  
       if(toggle) {
         RCSOFTCHECK(rcl_publish(&hatoxEnablePub, &hatoxEnableMsg, NULL));
@@ -427,6 +432,7 @@ void rosInit(void *pvParameter)
         RCCHECK(rclc_executor_spin_some(&executor, 100));
         handleButtons();
         handleSpeed();
+        ESP_LOGI("WHILE", "--------------------------------");
     }
 
     RCCHECK(rcl_publisher_fini(&hatoxVelPub, &node));

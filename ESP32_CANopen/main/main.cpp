@@ -151,6 +151,6 @@ extern "C"
   {
     connectWifi();
     xTaskCreate(&mainTask, "mainTask", 4096, NULL, 5, NULL);
-    xTaskCreate(&rosInit, "rosTask", 40000, NULL, 6, NULL);
+    xTaskCreate(&rosInit, "rosTask", 40000, NULL, 10, NULL);
   }
 }
